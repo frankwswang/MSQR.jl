@@ -25,7 +25,7 @@ struct regMPSGen
     end
 end
 
-function MPS_SwapTest_circuit(nBitA::Int64, ϕ::Real)
+function RBit_SwapTest_circuit(nBitA::Int64, ϕ::Real)
     circuit = chain(nBitA, 
                     put(nBitA, nBitA=>H),
                     put(nBitA, nBitA=>shift(ϕ)),
@@ -38,7 +38,7 @@ end
 function MPS_SwapTest(regT::DefaultRegister, regG::regMPSGen, ϕ::Real)
     vBit = nqubits(regT)
     nBitA = vBit + 2
-    circuit = MPS_SwapTest_circuit(nBitA, ϕ)
+    circuit = RBit_SwapTest_circuit(nBitA, ϕ)
     #println("Step 1")
     regG1 = zero_state(1)
     regG.reg1[1] == 1 && (regG1 |> X)
@@ -62,7 +62,7 @@ function MPS_SwapTest(regT::DefaultRegister, regG::regMPSGen, ϕ::Real)
     res
 end
 
-@testset "MPS Swap Test" begin
+@testset "Bit reusing Swap Test" begin
     NBit = 2
     ϕ = 0
     regTar = rand_state(NBit)
