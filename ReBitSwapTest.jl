@@ -48,6 +48,7 @@ function MPS_SwapTest(regT::DefaultRegister, regG::regMPSGen, ϕ::Real)
     #println("Step 2_2 regA: $(regA)")
     regA |> circuit[1] |> circuit[2]
     #println("Step 3 regA: \n $(regA.state)")
+    #println("Circuit: $(circuit)")
     for i = 1:(vBit-1)
         regA |> circuit[3][i]
         #println("Step 4_1")

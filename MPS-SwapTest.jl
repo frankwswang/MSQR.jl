@@ -2,7 +2,7 @@ using Yao
 using Yao.Blocks
 using QuAlgorithmZoo 
 using LinearAlgebra
-using Random
+using Statistics
 using Test
 
 """
@@ -27,7 +27,7 @@ function MScircuit(nBitT::Int64, vBit::Int64, depth::Int64, ϕ::Real, MPSblocks:
     push!(Cblocks, put(nBitA, nBitA=>shift(ϕ)))
     #println("s1")
     for i = 1:(nBitT-vBit)
-        MPSblock = put(nBitA, Tuple( (nBitA-1):-1:(nBitT+1), )=>MPSblocks[i] )
+        MPSblock = put(nBitA, Tuple( (nBitT+1):(nBitA-1), )=>MPSblocks[i] )
         #println("s2")
         push!(Cblocks, MPSblock)
         SWAPblock = control(nBitA, nBitA, ( (nBitA-1), (nBitT+1-i) )=>SWAP)
@@ -41,20 +41,56 @@ function MScircuit(nBitT::Int64, vBit::Int64, depth::Int64, ϕ::Real, MPSblocks:
     push!(Cblocks, put(nBitA, nBitA=>H))
     #println("s6")
     circuit = chain(nBitA,Cblocks)
-    #println("s7")
+    #println("The circuit:\n $(circuit)")
     circuit
 end
 
-function MSTest(nBitT::Int64, vBit::Int64, depth::Int64, ϕ::Real)
-    MPSGen = MPSDC(depth, nBitT, vBit)
-    MScircuit(nBitT, vBit, depth, ϕ, MPSGen.cBlocks)
+function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64, 
+                depth::Int64, ϕ::Real, nMeasure::Int64, Test::Bool=false)
+    nBitT = nqubits(regT)
+    circuit = MScircuit(nBitT, vBit, depth, ϕ, MPSGen.cBlocks)
+    #println("MS circuit: \n$(circuit)\n")
+    #println("MPS circuit: \n$(MPSGen.cExtend)\n")
+    Overlap = []
+    for i = 1:nMeasure 
+        regA = join(zero_state(2+vBit),copy(regT))
+        nBitA = 2 + nBitT
+        regA |> circuit[1] |> circuit[2]
+        for i = 3:2:( 3 + 2*(MPSGen.nBlock-2) )
+            regA |> circuit[i] |> circuit[i+1]
+            measure_reset!(regA, (nBitA-1), val = 0) 
+            println("circuit[$(i)]\n")
+            println("circuit[$(i+1)]\n")
+        end    
+        for i = ( 3 + 2*(MPSGen.nBlock-1) ):length(circuit)
+            regA |> circuit[i]
+            println("circuit[$(i)]\n")
+        end
+        push!(Overlap, expect(put(nBitA, nBitA=>Z), regA) |> tr)
+    end
+    ActualOverlaps = mean(Overlap)
+    res = ActualOverlaps
+    if Test == true
+        @testset "MPS-Swap Test Reliability Check" begin
+            regG = zero_state(nBitT)
+            regG |> MPSGen.cExtend
+            # ExpectOverlaps = tr(mat(regG |> ρ)*mat(regT |> ρ))
+            ExpectOverlaps = ((regG.state'*regT.state)[1]|>abs)^2
+            @test  ActualOverlaps ≈ ExpectOverlaps
+            res = push!([res], ExpectOverlaps) 
+        end
+    end
+    res
+    
 end
 
+"""Parameters Setup."""
 nBitT = 4
-vBit = 2
+ vBit = 3
 depth = 1
-ϕ = 0
+    ϕ = 0
 
-c2 = MSTest(nBitT, vBit, depth, ϕ)
-
-
+"""Main Program."""
+regTar = rand_state(nBitT)
+MPSGen = MPSDC(depth, nBitT, vBit)
+c2 = MSTest(regTar, MPSGen, vBit, depth, ϕ, 1, true)
