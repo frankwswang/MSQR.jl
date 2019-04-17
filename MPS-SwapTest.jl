@@ -19,6 +19,7 @@ push!(LOAD_PATH,"../MPSDiffCircuit.jl/src")
 
 using MPSDiffCircuit
 
+## Sub-functions.
 function MScircuit(nBitT::Int64, vBit::Int64, depth::Int64, ϕ::Real, MPSblocks::Array)
     nBitG = 1 + vBit
     nBitA = 1 + nBitG + nBitT 
@@ -59,12 +60,12 @@ function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64,
         for i = 3:2:( 3 + 2*(MPSGen.nBlock-2) )
             regA |> circuit[i] |> circuit[i+1]
             measure_reset!(regA, (nBitA-1), val = 0) 
-            println("circuit[$(i)]\n")
-            println("circuit[$(i+1)]\n")
+            #println("circuit[$(i)]\n")
+            #println("circuit[$(i+1)]\n")
         end    
         for i = ( 3 + 2*(MPSGen.nBlock-1) ):length(circuit)
             regA |> circuit[i]
-            println("circuit[$(i)]\n")
+            #println("circuit[$(i)]\n")
         end
         push!(Overlap, expect(put(nBitA, nBitA=>Z), regA) |> tr)
     end
@@ -84,13 +85,13 @@ function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64,
     
 end
 
-"""Parameters Setup."""
+## Parameters Setup.
 nBitT = 4
- vBit = 3
+ vBit = 1
 depth = 1
     ϕ = 0
 
-"""Main Program."""
+## Main Program.
 regTar = rand_state(nBitT)
-MPSGen = MPSDC(depth, nBitT, vBit)
+MPSGen = MPSDC("CS", nBitT, vBit)
 c2 = MSTest(regTar, MPSGen, vBit, depth, ϕ, 1, true)
