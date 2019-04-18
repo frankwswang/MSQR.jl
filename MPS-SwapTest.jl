@@ -14,7 +14,7 @@ https://github.com/frankwswang/MPSDiffCircuit.jl.git
 
 #==#
 # Author Tests only.  
-push!(LOAD_PATH,"../MPSDiffCircuit.jl/src") 
+push!(LOAD_PATH,"./MPSDiffCircuit.jl/src") 
 # =#
 
 using MPSDiffCircuit
@@ -50,12 +50,12 @@ function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64,
                 depth::Int64, ϕ::Real, nMeasure::Int64, Test::Bool=false)
     nBitT = nqubits(regT)
     circuit = MScircuit(nBitT, vBit, depth, ϕ, MPSGen.cBlocks)
-    #println("MS circuit: \n$(circuit)\n")
+    println("MS circuit: \n$(circuit)\n")
     #println("MPS circuit: \n$(MPSGen.cExtend)\n")
     Overlap = []
     for i = 1:nMeasure 
         regA = join(zero_state(2+vBit),copy(regT))
-        nBitA = 2 + nBitT
+        nBitA = 2 + nBitT + vBit
         regA |> circuit[1] |> circuit[2]
         for i = 3:2:( 3 + 2*(MPSGen.nBlock-2) )
             regA |> circuit[i] |> circuit[i+1]
@@ -86,12 +86,18 @@ function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64,
 end
 
 ## Parameters Setup.
-nBitT = 4
+nBitT = 3
  vBit = 1
 depth = 1
     ϕ = 0
 
 ## Main Program.
-regTar = rand_state(nBitT)
+# regTar = rand_state(nBitT)
+
+#cH = chain(nBitT, [put(nBitT, i=>H) for i=nBitT:-1:1])
+#regTar = zero_state(nBitT)
+#regTar |> repeat(nBitT, X) |> cH |> chain(nBitT, put(nBitT, (1,2)=>CNOT), put(nBitT, (3,2)=>CNOT), put(nBitT, (4,1)=>CNOT))
+regTar = product_state(nBitT, 5)
 MPSGen = MPSDC("CS", nBitT, vBit)
-c2 = MSTest(regTar, MPSGen, vBit, depth, ϕ, 1, true)
+# regTar |> MPSGen.cExtend
+c2 = MSTest(regTar, MPSGen, vBit, depth, ϕ, 10000, true)
