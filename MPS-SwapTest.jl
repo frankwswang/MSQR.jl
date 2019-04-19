@@ -20,7 +20,7 @@ push!(LOAD_PATH,"./MPSDiffCircuit.jl/src")
 using MPSDiffCircuit
 
 ## Sub-functions.
-function MScircuit(nBitT::Int64, vBit::Int64, depth::Int64, ϕ::Real, MPSblocks::Array)
+function MScircuit(nBitT::Int64, vBit::Int64, ϕ::Real, MPSblocks::Array)
     nBitG = 1 + vBit
     nBitA = 1 + nBitG + nBitT 
     Cblocks = []
@@ -47,15 +47,15 @@ function MScircuit(nBitT::Int64, vBit::Int64, depth::Int64, ϕ::Real, MPSblocks:
 end
 
 function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64, 
-                depth::Int64, ϕ::Real, nMeasure::Int64, Test::Bool=false)
+                ϕ::Real, nMeasure::Int64, Test::Bool=false)
     nBitT = nqubits(regT)
-    circuit = MScircuit(nBitT, vBit, depth, ϕ, MPSGen.cBlocks)
-    println("MS circuit: \n$(circuit)\n")
+    circuit = MScircuit(nBitT, vBit, ϕ, MPSGen.cBlocks)
+    println("MPS-SwapTest Circuit: \n$(circuit)\n")
     #println("MPS circuit: \n$(MPSGen.cExtend)\n")
     Overlap = []
     for i = 1:nMeasure 
         regA = join(zero_state(2+vBit),copy(regT))
-        nBitA = 2 + nBitT + vBit
+        nBitA = 2 + vBit + nBitT
         regA |> circuit[1] |> circuit[2]
         for i = 3:2:( 3 + 2*(MPSGen.nBlock-2) )
             regA |> circuit[i] |> circuit[i+1]
@@ -67,18 +67,20 @@ function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64,
             regA |> circuit[i]
             #println("circuit[$(i)]\n")
         end
-        push!(Overlap, expect(put(nBitA, nBitA=>Z), regA) |> tr)
+        push!(Overlap, expect(put(nBitA, nBitA=>Z), regA))
     end
-    ActualOverlaps = mean(Overlap)
+    ActualOverlaps = mean(Overlap) |> real #Take the real part for simplicity since the imaginary part is 0.
     res = ActualOverlaps
     if Test == true
         @testset "MPS-Swap Test Reliability Check" begin
             regG = zero_state(nBitT)
             regG |> MPSGen.cExtend
-            # ExpectOverlaps = tr(mat(regG |> ρ)*mat(regT |> ρ))
-            ExpectOverlaps = ((regG.state'*regT.state)[1]|>abs)^2
-            @test  ActualOverlaps ≈ ExpectOverlaps
-            res = push!([res], ExpectOverlaps) 
+            #ExpectOverlaps = tr(mat(regG |> ρ)*mat(regT |> ρ))
+            ExpectOverlaps = ((regT.state'*regG.state)[1] |> abs)^2
+            #println("regT: $(regT.state)\n regG: $(regG.state)\n")
+            @test isapprox.(ActualOverlaps, ExpectOverlaps, atol=0.02*ExpectOverlaps)
+            println("\nExpectOverlaps: $(ExpectOverlaps)\nActualOverlaps: $(ActualOverlaps)\n") 
+            res = push!([res], ExpectOverlaps)
         end
     end
     res
@@ -86,18 +88,13 @@ function MSTest(regT::DefaultRegister, MPSGen::MPSDC, vBit::Int64,
 end
 
 ## Parameters Setup.
-nBitT = 3
+nBitT = 5
  vBit = 1
 depth = 1
     ϕ = 0
 
 ## Main Program.
-# regTar = rand_state(nBitT)
-
-#cH = chain(nBitT, [put(nBitT, i=>H) for i=nBitT:-1:1])
-#regTar = zero_state(nBitT)
-#regTar |> repeat(nBitT, X) |> cH |> chain(nBitT, put(nBitT, (1,2)=>CNOT), put(nBitT, (3,2)=>CNOT), put(nBitT, (4,1)=>CNOT))
-regTar = product_state(nBitT, 5)
+regTar = rand_state(nBitT)
 MPSGen = MPSDC("CS", nBitT, vBit)
-# regTar |> MPSGen.cExtend
-c2 = MSTest(regTar, MPSGen, vBit, depth, ϕ, 10000, true)
+c2 = MSTest(regTar, MPSGen, vBit, ϕ, 30000, true)
+
