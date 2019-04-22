@@ -1,0 +1,4 @@
+name = "MSQR"
+uuid = "1da0c1b0-64df-11e9-3ca4-e71d211e204c"
+authors = ["frankwangws <frank.wang.w.s@gmail.com>"]
+version = "0.1.0"
