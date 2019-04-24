@@ -8,6 +8,7 @@ https://github.com/frankwswang/MPSDiffCircuit.jl.git
 module MPSSwapTest
 export MScircuit
 export MSTest
+export MSTTest
 
 using Yao, Yao.Blocks
 using QuAlgorithmZoo 
@@ -45,52 +46,64 @@ function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, ϕ::Real, MPSblocks::
     push!(Cblocks, put(nBitA, nBitA=>H))
     # println("S6")
     circuit = chain(nBitA,Cblocks)
-    #println("The circuit:\n $(circuit)")
+    # println("The circuit:\n $(circuit)")
+    # println("type of circuit: $(typeof(circuit))")
     circuit
 end
 
-function MSTest(regT::DefaultRegister, MPSGen::MPSC, vBit::Int64, rBit::Int64, 
-                ϕ::Real, nMeasure::Int64, Test::Bool=false)
-    nBitT = nqubits(regT)
-    circuit = MScircuit(nBitT, vBit, rBit, ϕ, MPSGen.cBlocks)
-    println("MPS-SwapTest Circuit: \n$(circuit)\n")
-    #println("MPS circuit: \n$(MPSGen.cExtend)\n")
-    Overlap = []
-    println("Measure times:")
-    for i = 1:nMeasure
-        (i*10)%nMeasure==0 && println("nMeasure = $i")
-        # println("S7") 
-        regA = join(zero_state(1+rBit+vBit),copy(regT))
+struct MSTest
+    circuit
+    regA
+    witnessOp
+    overlaps
+
+    function MSTest(regT::DefaultRegister, circuit::ChainBlock, vBit::Int64, rBit::Int64, 
+                    nMeasure::Int64, trainStep::Bool = false)
+        nBitT = nqubits(regT)
+        par2nd = setMPSpar(nBitT, vBit, rBit)
+        nBlock = par2nd.nBlock
         nBitA = 1 + rBit + vBit + nBitT
-        regA |> circuit[1] |> circuit[2]
-        # println("S8")
-        for i = 3:2:( 3 + 2*(MPSGen.nBlock-2) )
-            regA |> circuit[i] |> circuit[i+1]
-            measure_reset!(regA, Tuple(nBitA-rBit:nBitA-1,), val = 0) 
-            # println("S9")
-        end    
-        for i = ( 3 + 2*(MPSGen.nBlock-1) ):length(circuit)
-            regA |> circuit[i]
-            # println("S10")
+        regA = zero_state(nBitA)
+        witnessOp = put(nBitA, nBitA=>Z)
+        Overlap = []
+        for i = 1:nMeasure
+            trainStep == true && (i*10)%nMeasure==0 && println("nMeasure = $i")
+            # println("S7") 
+            regA = join(zero_state(1+rBit+vBit),copy(regT)) #This operation changes regA in the parent scope.
+            regA |> circuit[1] |> circuit[2]
+            # println("S8")
+            for i = 3:2:( 3 + 2*(nBlock-2) )
+                regA |> circuit[i] |> circuit[i+1]
+                measure_reset!(regA, Tuple(nBitA-rBit:nBitA-1,), val = 0) 
+                # println("S9")
+            end    
+            for i = ( 3 + 2*(nBlock-1) ):length(circuit)
+                regA |> circuit[i]
+                # println("S10")
+            end
+            push!(Overlap, expect(witnessOp, regA))
         end
-        push!(Overlap, expect(put(nBitA, nBitA=>Z), regA))
+        # println("S11")
+        ActualOverlaps = mean(Overlap) |> real #Take the real part for simplicity since the imaginary part is 0.
+        new(circuit, regA, witnessOp, ActualOverlaps)
     end
-    # println("S11")
-    ActualOverlaps = mean(Overlap) |> real #Take the real part for simplicity since the imaginary part is 0.
-    res = ActualOverlaps
-    if Test == true
-        @testset "MPS-Swap Test Reliability Check" begin
-            regG = zero_state(nBitT)
-            regG |> MPSGen.cExtend
-            ExpectOverlaps = ((regT.state'*regG.state)[1] |> abs)^2
-            @test isapprox.(ActualOverlaps, ExpectOverlaps, atol=0.02*ExpectOverlaps)
-            println("\nExpectOverlaps: $(ExpectOverlaps)\nActualOverlaps: $(ActualOverlaps)\n") 
-            res = push!([res], ExpectOverlaps)
-            # println("S12")
-        end
+
+end
+
+function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock, 
+                 vBit::Int64, rBit::Int64, nMeasure::Int64)             
+    MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure, true)
+    println("\nThe circuit of MPSSwapTest:\n$(MSTres.circuit)")
+    ActualOverlaps = MSTres.overlaps
+    nBitT = nqubits(regT)
+    @testset "MPS-Swap Test Reliability Check" begin
+        regG = zero_state(nBitT)
+        regG |> cExtend
+        ExpectOverlaps = ((regT.state'*regG.state)[1] |> abs)^2
+        @test isapprox.(ActualOverlaps, ExpectOverlaps, atol=0.02*ExpectOverlaps)
+        println("\nExpectOverlaps: $(ExpectOverlaps)\nActualOverlaps: $(ActualOverlaps)\n")
+        res = ActualOverlaps 
     end
-    res
-    
 end
 
 end
