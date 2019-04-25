@@ -25,8 +25,8 @@ using MPSSwapTest
 # test1 = MSTTest(regTar, circuit, MPSGen.cExtend, vBit, rBit, nMeasure)
 
 # MS Test of differentiable quantum state.
-nMeasure = 2000
-   nBitT = 4
+nMeasure = 4000
+   nBitT = 5
     vBit = 2
     rBit = 1
    depth = 4
