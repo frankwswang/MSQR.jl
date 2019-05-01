@@ -10,15 +10,10 @@ export MScircuit
 export MSTest
 export MSTTest
 
-using Yao, Yao.Blocks
-using QuAlgorithmZoo 
+using Yao, Yao.ConstGate
 using LinearAlgebra
 using Statistics
 using Test
-# #==#
-# # Author Tests only.  
-# push!(LOAD_PATH,abspath("../MPSCircuit.jl/src")) 
-# # =#
 using MPSCircuit
 
 ## Sub-functions.
@@ -35,12 +30,12 @@ function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, ϕ::Real, MPSblocks::
         MPSblock = put(nBitA, Tuple( (nBitT+1):(nBitA-1), )=>MPSblocks[i] )
         # println("S2")
         push!(Cblocks, MPSblock)
-        SWAPblock = chain(nBitA, [control(nBitA, nBitA, ( (nBitA-1-irBit), (nBitT-(i-1)*rBit-irBit) )=>SWAP) for irBit = 0:rBit-1])
+        SWAPblock = chain(nBitA, [control(nBitA, nBitA, ( (nBitA-1-irBit), (nBitT-(i-1)*rBit-irBit) )=>ConstGate.SWAP) for irBit = 0:rBit-1])
         push!(Cblocks, SWAPblock)
         # println("S3")
     end
     # println("S4")
-    SWAPvBit = chain(nBitA, [control(nBitA, nBitA, ( (nBitT+i),i )=>SWAP) for i=vBit:-1:1])
+    SWAPvBit = chain(nBitA, [control(nBitA, nBitA, ( (nBitT+i),i )=>ConstGate.SWAP) for i=vBit:-1:1])
     # println("S5")
     push!(Cblocks, SWAPvBit)
     push!(Cblocks, put(nBitA, nBitA=>H))
@@ -74,7 +69,7 @@ struct MSTest
             # println("S8")
             for i = 3:2:( 3 + 2*(nBlock-2) )
                 regA |> circuit[i] |> circuit[i+1]
-                measure_reset!(regA, Tuple(nBitA-rBit:nBitA-1,), val = 0) 
+                measure_collapseto!(regA, Tuple(nBitA-rBit:nBitA-1,), config = 0) 
                 # println("S9")
             end    
             for i = ( 3 + 2*(nBlock-1) ):length(circuit)

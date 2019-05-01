@@ -2,3 +2,8 @@ name = "MSQR"
 uuid = "1da0c1b0-64df-11e9-3ca4-e71d211e204c"
 authors = ["frankwangws <frank.wang.w.s@gmail.com>"]
 version = "0.1.0"
+
+[deps]
+Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+MPSCircuit = "c4dd8f60-5e06-11e9-07f8-63d1cb63a4d1"

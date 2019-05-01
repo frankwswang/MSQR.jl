@@ -1,49 +1,52 @@
-using Yao, Yao.Blocks
-using QuAlgorithmZoo 
-using LinearAlgebra
-using Statistics
-using Test
-#==#
-# Author Tests only.  
-push!(LOAD_PATH,abspath("../MPSCircuit.jl/src")) 
-# =#
+module MSQR
+export MSQRpar
+export MSQRtrain
+
+# include("MPSSwapTest.jl")
+
+using Yao, Yao.ConstGate
 using MPSCircuit
 push!(LOAD_PATH,abspath("src")) 
 using MPSSwapTest
 
-function train(circuit, nMeasure::Int64, learningRate::Real, nTrain::Int64)
-    dGates = collect(circuit, AbstractDiff)
-    # println("t1")
-    for i=1:nTrain
-        mst = MSTest(regTar, circuit, vBit, rBit, nMeasure)
-        # println("t2")
-        grads = opdiff.(()->MSTest(regTar, circuit, vBit, rBit, nMeasure).regA, dGates,Ref(mst.witnessOp))
-        # println("t3")
-        dispatch!(+, dGates, grads.*learningRate)
-        # println("t4")
-        if nTrain <= 100
-            showCase = i%2==0
-        else
-            showCase = (20*i)%nTrain==0
-        end 
-        if  showCase
-            println("Training Step $(i), overlap = $(mst.overlaps)")
-            # println("Grads: $(grads[1])")
-        end
-        # println("t5")
-    end
+mutable struct MSQRpar
+    circuit::ChainBlock
+    reg::DefaultRegister
+    vBit::Int64
+    rBit::Int64
 end
 
-nBitT = 5
- vBit = 2
- rBit = 1
-depth = 4
-    ϕ = 0
-nMeasure = 2000
-learningRate = 0.1
-nTrain = 500
+function MSQRtrain(par::MSQRpar, nMeasure::Int64, learningRate::Real, nTrain::Int64; show::Bool=false)
+    circuit = par.circuit
+    regTar = par.reg
+    vBit = par.vBit
+    rBit = par.rBit
+    dGates = collect_blocks(AbstractDiff, circuit)
+    # dGates = collect(circuit, AbstractDiff)
+    # println("dGates:\n$(dGates)")
+    # println("type of dGates:\n$(typeof(dGates))")
+    println("t1")
+    for i=1:nTrain
+        mst = MSTest(regTar, circuit, vBit, rBit, nMeasure)
+        println("t2")
+        grads = opdiff.(()->MSTest(regTar, circuit, vBit, rBit, nMeasure).regA, dGates,Ref(mst.witnessOp))
+        println("t3")
+        println("grads: $(grads)")
+        println("dGates: $(dGates)")
+        dispatch!.(+, dGates, grads.*learningRate)
+        println("t4")
+        if show == true
+            if nTrain <= 100
+                showCase = i%2==0
+            else
+                showCase = (20*i)%nTrain==0
+            end 
+            if  showCase
+                println("Training Step $(i), overlap = $(mst.overlaps)")
+            end
+        end
+    end
+    circuit
+end
 
-regTar = rand_state(nBitT)
-MPSGen = MPSC(("DC",depth),nBitT,vBit,rBit)
-circuit = MScircuit(nBitT, vBit, rBit, ϕ, MPSGen.cBlocks)
-train(circuit, nMeasure, learningRate, nTrain)
+end
