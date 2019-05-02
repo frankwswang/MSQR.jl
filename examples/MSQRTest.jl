@@ -18,21 +18,19 @@ regTar = rand_state(nBitT)
 MPSGen = MPSC(("DC",depth),nBitT,vBit,rBit)
 circuit = MScircuit(nBitT, vBit, rBit, ϕ, MPSGen.cBlocks)
 lnRate = "ADAM"
-nTrain = 100
+nTrain = 250
 
 ## Gradient Optimization using fixed step size(default size=0.1).
 regTar2 = copy(regTar)
-blocks = collect_blocks(AbstractDiff, MPSGen.circuit)
-dBpar = [parameters(blocks[i])[1] for i=1:length(blocks)]
+circuit2= deepcopy(circuit)
 lnRate2 = 0.15
-nTrain2 = 200
+nTrain2 = 250
 
 # Training Program.
 ## ADAM method.
 par = MSQRpar(circuit, regTar, vBit, rBit)
-MSQRtrain(par, nMeasure, nTrain, learningRate = lnRate, show=true)
+MSQRtrain!(par, nMeasure, nTrain, learningRate = lnRate, show=true)
 
 ## default method.
-dispatch!.(collect_blocks(AbstractDiff, circuit), dBpar)
-par2 = MSQRpar(circuit, regTar2, vBit, rBit)
-MSQRtrain(par, nMeasure, nTrain2, learningRate = lnRate2, show=true)
+par2 = MSQRpar(circuit2, regTar2, vBit, rBit)
+MSQRtrain!(par2, nMeasure, nTrain2, learningRate = lnRate2, show=true)
