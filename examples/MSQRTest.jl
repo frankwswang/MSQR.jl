@@ -1,7 +1,5 @@
-push!(LOAD_PATH,abspath("src"))
 using Yao
 using MSQR
-using MPSSwapTest
 using MPSCircuit
 
 # Basic parameters.

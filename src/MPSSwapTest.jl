@@ -1,20 +1,11 @@
 """
-Using Matrix Product State Structure and SWAP Test to get state overlaps between 2 wave-functions.
+Using Matrix Product State Structure and SWAP Test to get state overlaps between 2 wave functions.
 
-Need to add another package if you want to run the code: 
-https://github.com/frankwswang/MPSDiffCircuit.jl.git
 """
 
-module MPSSwapTest
 export MScircuit
 export MSTest
 export MSTTest
-
-using Yao, Yao.ConstGate
-using LinearAlgebra
-using Statistics
-using Test
-using MPSCircuit
 
 # Function to build quantum circuit for MPS-Swap Test.
 function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, ϕ::Real, MPSblocks::Array)
@@ -99,6 +90,4 @@ function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock
         println("\nExpectOverlaps: $(ExpectOverlaps)\nActualOverlaps: $(ActualOverlaps)\n")
         res = ActualOverlaps 
     end
-end
-
 end

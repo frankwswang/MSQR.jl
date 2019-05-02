@@ -1,7 +1,6 @@
-push!(LOAD_PATH,abspath("src")) 
 using Yao
+using MSQR
 using MPSCircuit
-using MPSSwapTest
 
 # MS Test of Cluster State.
 nMeasure = 30000
