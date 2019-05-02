@@ -47,7 +47,6 @@ end
 
 # Main function of MPS-Swap Test algorithm.
 struct MSTest
-    circuit
     regA
     witnessOp
     overlaps
@@ -80,7 +79,7 @@ struct MSTest
         end
         # println("S11")
         ActualOverlaps = mean(Overlap) |> real #Take the real part for simplicity since the imaginary part is 0.
-        new(circuit, regA, witnessOp, ActualOverlaps)
+        new(regA, witnessOp, ActualOverlaps)
     end
 
 end
@@ -89,7 +88,7 @@ end
 function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock, 
                  vBit::Int64, rBit::Int64, nMeasure::Int64)             
     MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure, true)
-    println("\nThe circuit of MPSSwapTest:\n$(MSTres.circuit)")
+    println("\nThe circuit of MPSSwapTest:\n$(circuit)")
     ActualOverlaps = MSTres.overlaps
     nBitT = nqubits(regT)
     @testset "MPS-Swap Test Reliability Check" begin

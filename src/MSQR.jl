@@ -1,12 +1,10 @@
 module MSQR
 export MSQRpar
-export MSQRtrain
+export MSQRtrain!
 
-# include("MPSSwapTest.jl")
-
+push!(LOAD_PATH,abspath("src")) 
 using Yao, Yao.ConstGate
 using MPSCircuit
-push!(LOAD_PATH,abspath("src")) 
 using MPSSwapTest
 using Flux.Optimise
 using LinearAlgebra
@@ -19,14 +17,15 @@ mutable struct MSQRpar
     rBit::Int64
 end
 
-# MSQR training function.
-function MSQRtrain(par::MSQRpar, nMeasure::Int64, nTrain::Int64; learningRate=0.1, show::Bool=false)
+# MSQR training function. This function will change par.circuit.
+function MSQRtrain!(par::MSQRpar, nMeasure::Int64, nTrain::Int64; learningRate=0.1, show::Bool=false)
     circuit = par.circuit
     regTar = par.reg
     nBitT = nqubits(regTar)
     vBit = par.vBit
     rBit = par.rBit
     dGates = collect_blocks(AbstractDiff, circuit)
+    res=[]
     # println("t1")
     if show
         println("\nTraining Parameters:")
@@ -60,9 +59,11 @@ function MSQRtrain(par::MSQRpar, nMeasure::Int64, nTrain::Int64; learningRate=0.
         if  showCase && show
             println("Training Step $(i), overlap = $(mst.overlaps)")
         end
+        push!(res,(i,mst.overlaps))
         # println("t5")
     end
-    circuit
+    push!(res, circuit)
+    res
 end
 
 end

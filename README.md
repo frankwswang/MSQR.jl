@@ -13,7 +13,12 @@ Combining MPS-Swap Test method and Quantum Gradient Optimization, MSQR can train
 * [__Julia 1.1__](https://julialang.org)
 
 ### Installation
-Please type `]` in Julia REPL to enter [`Pkg` mode](https://julialang.github.io/Pkg.jl/v1.0/index.html), then type:
+__Please first install another unregistered package [MPSCircuit](https://github.com/frankwswang/MPSCircuit.jl).__
+Type `]` in Julia REPL to enter [`Pkg` mode](https://julialang.github.io/Pkg.jl/v1.0/index.html), then type:
+```
+pkg> add https://github.com/frankwswang/MPSCircuit.jl.git
+```
+__Then use the same approach to install this project package:__
 ```
 pkg> add https://github.com/frankwswang/MSQR.jl.git
 ``` 
