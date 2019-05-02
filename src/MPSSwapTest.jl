@@ -16,7 +16,7 @@ using Statistics
 using Test
 using MPSCircuit
 
-## Sub-functions.
+# Function to build quantum circuit for MPS-Swap Test.
 function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, ϕ::Real, MPSblocks::Array)
     par2nd = setMPSpar(nBitT, vBit, rBit)
     nBlock = par2nd.nBlock
@@ -42,10 +42,10 @@ function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, ϕ::Real, MPSblocks::
     # println("S6")
     circuit = chain(nBitA,Cblocks)
     # println("The circuit:\n $(circuit)")
-    # println("type of circuit: $(typeof(circuit))")
     circuit
 end
 
+# Main function of MPS-Swap Test algorithm.
 struct MSTest
     circuit
     regA
@@ -62,7 +62,7 @@ struct MSTest
         witnessOp = put(nBitA, nBitA=>Z)
         Overlap = []
         for i = 1:nMeasure
-            trainStep == true && (i*10)%nMeasure==0 && println("nMeasure = $i")
+            trainStep == true && (i*10)%nMeasure==0 && println("iMeasure = $i")
             # println("S7") 
             regA = join(zero_state(1+rBit+vBit),copy(regT)) #This operation changes regA in the parent scope.
             regA |> circuit[1] |> circuit[2]
@@ -85,6 +85,7 @@ struct MSTest
 
 end
 
+# Test function that verify the validity of MPS-Swap Test algorithm. 
 function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock, 
                  vBit::Int64, rBit::Int64, nMeasure::Int64)             
     MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure, true)
