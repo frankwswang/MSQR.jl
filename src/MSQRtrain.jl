@@ -22,7 +22,7 @@ function MSQRtrain!(par::MSQRpar, nMeasure::Int64, nTrain::Int64; learningRate=0
     vBit = par.vBit
     rBit = par.rBit
     dGates = collect_blocks(AbstractDiff, circuit)
-    res=[]
+    overlaps = Real[]
     # println("t1")
     if show
         println("\nTraining Parameters:")
@@ -56,9 +56,8 @@ function MSQRtrain!(par::MSQRpar, nMeasure::Int64, nTrain::Int64; learningRate=0
         if  showCase && show
             println("Training Step $(i), overlap = $(mst.overlaps)")
         end
-        push!(res,(i,mst.overlaps))
+        push!(overlaps,mst.overlaps)
         # println("t5")
     end
-    push!(res, circuit)
-    res
+    (overlaps, circuit)
 end
