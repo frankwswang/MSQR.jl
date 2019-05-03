@@ -39,6 +39,7 @@ function MSQRtrain!(par::MSQRpar, nMeasure::Int64, nTrain::Int64; learningRate=0
         else
             witnessOp = mst.witnessOp
         end
+        # println("t2_2")
         grads = opdiff.(()->MSTest(regTar, circuit, vBit, rBit, nMeasure).regA, dGates,Ref(witnessOp))
         # println("t3")
         if learningRate == "ADAM"

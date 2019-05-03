@@ -1,5 +1,5 @@
 """
-Using Matrix Product State Structure and SWAP Test to get state overlaps between 2 wave functions.
+Applying Swap Test on a MPS-reusable circuit to get state overlaps between 2 wave functions.
 
 """
 
@@ -42,34 +42,29 @@ struct MSTest
     witnessOp
     overlaps
 
-    function MSTest(regT::DefaultRegister, circuit::ChainBlock, vBit::Int64, rBit::Int64, 
-                    nMeasure::Int64, trainStep::Bool = false)
+    function MSTest(regT::DefaultRegister, circuit::ChainBlock, vBit::Int64, rBit::Int64, nMeasure::Int64)
         nBitT = nqubits(regT)
         par2nd = setMPSpar(nBitT, vBit, rBit)
         nBlock = par2nd.nBlock
         nBitA = 1 + rBit + vBit + nBitT
         regA = zero_state(nBitA)
         witnessOp = put(nBitA, nBitA=>Z)
-        Overlap = []
-        for i = 1:nMeasure
-            trainStep == true && (i*10)%nMeasure==0 && println("iMeasure = $i")
-            # println("S7") 
-            regA = join(zero_state(1+rBit+vBit),copy(regT)) #This operation changes regA in the parent scope.
-            regA |> circuit[1] |> circuit[2]
-            # println("S8")
-            for i = 3:2:( 3 + 2*(nBlock-2) )
-                regA |> circuit[i] |> circuit[i+1]
-                measure_collapseto!(regA, Tuple(nBitA-rBit:nBitA-1,), config = 0) 
-                # println("S9")
-            end    
-            for i = ( 3 + 2*(nBlock-1) ):length(circuit)
-                regA |> circuit[i]
-                # println("S10")
-            end
-            push!(Overlap, expect(witnessOp, regA))
+        # println("S7") 
+        regA = join(zero_state(1+rBit+vBit, nbatch=nMeasure), repeat(copy(regT),nMeasure) ) #This operation changes regA in the parent scope.
+        regA |> circuit[1] |> circuit[2]
+        # println("S8")
+        for i = 3:2:( 3 + 2*(nBlock-2) )
+            regA |> circuit[i] |> circuit[i+1]
+            measure_collapseto!(regA, Tuple(nBitA-rBit:nBitA-1,), config = 0) 
+            # println("S9")
+        end    
+        for i = ( 3 + 2*(nBlock-1) ):length(circuit)
+            regA |> circuit[i]
+            # println("S10")
         end
+        Overlaps = expect(witnessOp, regA)
         # println("S11")
-        ActualOverlaps = mean(Overlap) |> real #Take the real part for simplicity since the imaginary part is 0.
+        ActualOverlaps = mean(Overlaps) |> real #Take the real part for simplicity since the imaginary part is 0.
         new(regA, witnessOp, ActualOverlaps)
     end
 
@@ -78,7 +73,7 @@ end
 # Test function that verify the validity of MPS-Swap Test algorithm. 
 function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock, 
                  vBit::Int64, rBit::Int64, nMeasure::Int64)             
-    MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure, true)
+    MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure)
     println("\nThe circuit of MPSSwapTest:\n$(circuit)")
     ActualOverlaps = MSTres.overlaps
     nBitT = nqubits(regT)
