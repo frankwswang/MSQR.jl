@@ -71,18 +71,20 @@ struct MSTest
 end
 
 # Test function that verify the validity of MPS-Swap Test algorithm. 
-function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock, 
-                 vBit::Int64, rBit::Int64, nMeasure::Int64)             
-    MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure)
-    println("\nThe circuit of MPSSwapTest:\n$(circuit)")
-    ActualOverlaps = MSTres.overlaps
-    nBitT = nqubits(regT)
-    @testset "MPS-Swap Test Reliability Check" begin
-        regG = zero_state(nBitT)
+struct MSTTest
+    Aoverlaps
+    Eoverlaps
+    error
+
+    function MSTTest(regT::DefaultRegister, circuit::ChainBlock, cExtend::ChainBlock, 
+                    vBit::Int64, rBit::Int64, nMeasure::Int64)             
+        MSTres = MSTest(regT, circuit, vBit, rBit, nMeasure)
+        ActualOverlaps = MSTres.overlaps
+        regG = zero_state(nqubits(regT))
         regG |> cExtend
         ExpectOverlaps = ((regT.state'*regG.state)[1] |> abs)^2
-        @test isapprox.(ActualOverlaps, ExpectOverlaps, atol=0.02*ExpectOverlaps)
-        println("\nExpectOverlaps: $(ExpectOverlaps)\nActualOverlaps: $(ActualOverlaps)\n")
-        res = ActualOverlaps 
+        error = abs(ActualOverlaps/ExpectOverlaps - 1)
+        new(ActualOverlaps, ExpectOverlaps, error)
     end
+
 end

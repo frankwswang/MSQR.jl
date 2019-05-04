@@ -8,7 +8,7 @@ nBitT = 5
 vBit = 2
 rBit = 1
 depth = 6
-nMeasure = 15000
+nMeasure = 12000
 ϕ = 0
 
 # Setup Training environments
