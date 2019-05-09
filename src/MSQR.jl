@@ -9,5 +9,6 @@ using Test
 
 include("MPSSwapTest.jl")
 include("MSQRtrain.jl")
+include("SWAPtrain.jl")
 
 end
