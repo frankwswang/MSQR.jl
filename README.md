@@ -1,5 +1,5 @@
 # MSQR.jl
-Qubit Reconstruction algorithm based on MPS-SwapTest hybrid method.
+Qubit-state Reconstruction algorithm based on MPS-SwapTest hybrid method.
 
 ## Main functions
 ### MScircuit
