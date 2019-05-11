@@ -61,8 +61,13 @@ SWAP-Test training function. This function will change the parameters of differe
 function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nMeasure::Int64, nTrain::Int64;
                     Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false)
     if show
+        cPar = MPSDCpar(circuit)
+        nBitT = cPar.nBitA
+        vBit = cPar.vBit
+        rBit = cPar.rBit
+        depth = cPar.depth 
         println("\nSWAP Training Parameters:")
-        println("nBitT=$(nqubits(regTar))")
+        println("nBitT=$(nBitT) vBit=$(vBit) rBit=$(rBit) depth=$(depth)")
         println("nMeasure=$(nMeasure) nTrain=$(nTrain) GDmethod=$(GDmethod)\n")
         println("Initial overlap = $(SWAPtest(regTar, circuit, nMeasure).overlap)")
     end

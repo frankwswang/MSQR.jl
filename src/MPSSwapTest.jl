@@ -1,11 +1,11 @@
 #=
 Applying SWAP Test on a MPS-reusable circuit to get states' overlap between 2 wave functions.
 =#
-export nBitSet, MScircuit, MStest, MSTtest 
+export MSCpar, MScircuit, MStest, MSTtest 
 
 
 """
-    nBitSet(MSCircuit::ChainBlock)
+    MSCpar(MSCircuit::ChainBlock)
 Get the set of nBit parameters from a circuit built by function `MScircuit`.
 \nFields:
 \n`vBit::Int64`: Number of virtual qubits.
@@ -13,18 +13,20 @@ Get the set of nBit parameters from a circuit built by function `MScircuit`.
 \n`nBitT::Int64`: Number of qubits in target register.
 \n`nBitA::Int64`: Number of qubits(lines) in MSCircuit.
 """
-struct nBitSet
+struct MSCpar
     vBit::Int64  # Number of virtual qubits.
     rBit::Int64  # Number of reusable qubits.
     nBitT::Int64 # Number of qubits in target register.
     nBitA::Int64 # Number of qubits(lines) in MSCircuit.
-
-    function nBitSet(MSCircuit::ChainBlock)
+    depth::Int64 # Depth of each MPS block in MSCircuit.
+    
+    function MSCpar(MSCircuit::ChainBlock)
         nBitA = nqubits(MSCircuit)
         vBit = length(MSCircuit[end-1])
         rBit = length(MSCircuit[4])
         nBitT = nBitA - 1 - vBit - rBit
-        new(vBit, rBit, nBitT, nBitA)
+        depth = length(content(MSCircuit[3])[1])
+        new(vBit, rBit, nBitT, nBitA, depth)
     end
 end
 
@@ -70,7 +72,7 @@ struct MStest
 
     function MStest(regT::DefaultRegister, MSCircuit::ChainBlock, nMeasure::Int64)
         nBitT = nqubits(regT)
-        nbset = nBitSet(MSCircuit)
+        nbset = MSCpar(MSCircuit)
         vBit = nbset.vBit
         rBit = nbset.rBit
         par2nd = setMPSpar(nBitT, vBit, rBit)

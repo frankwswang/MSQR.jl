@@ -11,13 +11,14 @@ MSQR training function. This function will change the parameters of differentiab
 """
 function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nMeasure::Int64, nTrain::Int64;
                     Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false)
-    nbset = nBitSet(MSCircuit)
-    nBitT = nbset.nBitT
-    vBit = nbset.vBit
-    rBit = nbset.rBit
     if show
+        cPar = MSCpar(MSCircuit)
+        nBitT = cPar.nBitT
+        vBit = cPar.vBit
+        rBit = cPar.rBit
+        depth = cPar.depth
         println("\nMSQR Training Parameters:")
-        println("nBitT=$(nBitT) vBit=$(vBit) rBit=$(rBit)")
+        println("nBitT=$(nBitT) vBit=$(vBit) rBit=$(rBit) depth=$(depth)")
         println("nMeasure=$(nMeasure) nTrain=$(nTrain) GDmethod=$(GDmethod)\n")
         println("Initial overlap = $(MStest(regTar, MSCircuit, nMeasure).overlap)")
     end
