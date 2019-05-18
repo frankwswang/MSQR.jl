@@ -1,4 +1,4 @@
-# push!(LOAD_PATH, abspath("src"))
+push!(LOAD_PATH, abspath("src"))
 using Yao
 using MSQR
 using MPSCircuit

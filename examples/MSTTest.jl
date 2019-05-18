@@ -1,3 +1,4 @@
+# push!(LOAD_PATH, abspath("src"))
 using Test
 using Yao
 using MSQR

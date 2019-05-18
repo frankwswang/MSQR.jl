@@ -25,7 +25,11 @@ struct MSCpar
         vBit = length(MSCircuit[end-1])
         rBit = length(MSCircuit[4])
         nBitT = nBitA - 1 - vBit - rBit
-        depth = length(content(MSCircuit[3])[1])
+        if length(collect_blocks(AbstractDiff, MSCircuit)) == 0
+            depth = 0
+        else
+            depth = length(content(MSCircuit[3])[1])
+        end
         new(vBit, rBit, nBitT, nBitA, depth)
     end
 end
