@@ -88,8 +88,8 @@ struct MStest
         for i = ( 3 + 2*(nBlock-1) ):length(MSCircuit)
             regA |> MSCircuit[i]
         end
-        Overlaps = expect(witnessOp, regA)
-        ActualOverlap = mean(Overlaps) |> real #Take the real part for simplicity since the imaginary part is 0.
+        OverlapOs = expect(witnessOp, regA)
+        ActualOverlap = sqrt(mean(OverlapOs) |> real) #Take the real part for simplicity since the imaginary part is 0.
         new(regA, witnessOp, ActualOverlap)
     end
 end
@@ -113,7 +113,7 @@ struct MSTtest
         ActualOverlap = MSTres.overlap
         regG = zero_state(nqubits(regT))
         regG |> cExtend
-        ExpectOverlap = ((regT.state'*regG.state)[1] |> abs)^2 #[1]: Convert array to complex number.
+        ExpectOverlap = (regT.state'*regG.state)[1] |> abs #[1]: Convert array to complex number.
         error = ActualOverlap/ExpectOverlap - 1
         new(ActualOverlap, ExpectOverlap, error)
     end
