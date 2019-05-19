@@ -30,8 +30,8 @@ struct SWAPtest
         reg = join(repeat(zero_state(1),nMeasure), reg1)
         reg = join(reg, reg2)
         reg |> cSWAP
-        overlapOs = expect(witnessOp, reg)
-        overlap = sqrt(mean(overlapOs) |> real)
+        overlaps = expect(witnessOp, reg)
+        overlap = mean(overlaps) |> real
         new(overlap, witnessOp, reg, cSWAP)
     end
 
@@ -47,8 +47,8 @@ struct SWAPtest
         reg = join(repeat(zero_state(1),nMeasure), reg1)
         reg = join(reg, reg2)
         reg |> cSWAP
-        overlapOs = expect(witnessOp, reg)
-        overlap = sqrt(mean(overlapOs) |> real)
+        overlaps = expect(witnessOp, reg)
+        overlap = mean(overlaps) |> real
         new(overlap, witnessOp, reg, cSWAP)
     end
 end
