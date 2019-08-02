@@ -13,7 +13,7 @@ Combining MPS-Swap Test method and Quantum Gradient Optimization, MSQR can train
 
 ## Setup Guide
 ### Julia Environment
-* [__Julia 1.1__](https://julialang.org)
+* [__Julia 1.1.1__](https://julialang.org)
 
 ### Installation
 __Please first install another unregistered package [MPSCircuit](https://github.com/frankwswang/MPSCircuit.jl).__
@@ -25,9 +25,12 @@ __Then use the same approach to install this project package:__
 ```
 pkg> add https://github.com/frankwswang/MSQR.jl.git
 ``` 
-__ATTENTION:__ This packge is dependent on package [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.4.1__. For the future development, you need to check its compatibility if you want to use it with a higher version of __Yao__. 
+__ATTENTION:__ This packge is dependent on package [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. For the future development, you need to check its compatibility if you want to use it with a higher version of __Yao__. 
 
-## Examples(How to use)
+## How to use
+Please type `using MPSCircuit ` and `using MSQR` to use any functions of this package. If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may also install CUDA-supported version of Yao: __[CuYao](https://github.com/QuantumBFS/CuYao.jl)__ to gain significant calculation acceleration for MSQR. After properly installing __CuYao__, you just need to type `using CuYao` before using any functions of MSQR. 
+
+## Examples 
 * __MSTest.jl:__ Showing the function of `MPSSwapTest`.
 * __MSQRTest.jl:__ Showing a training example of `MSQR`.
 

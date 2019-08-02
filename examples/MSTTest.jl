@@ -1,4 +1,5 @@
-# push!(LOAD_PATH, abspath("src"))
+push!(LOAD_PATH, abspath("./src"))
+push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
 using Test
 using Yao
 using MSQR
@@ -7,7 +8,7 @@ using MPSCircuit
 @testset "MPS-Swap Test Reliability Check" begin
 
 # MS Test of Cluster State.
-nMeasure = 10000
+nMeasure = 20000
 nBitT = 5
 vBit = 1
 rBit = 1

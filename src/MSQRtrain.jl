@@ -10,7 +10,7 @@ export MSQRtrain!, GDescent
 MSQR training function. This function will change the parameters of differentiable gates in MSCircuit.
 """
 function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nMeasure::Int64, nTrain::Int64;
-                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false)
+                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false)
     if show
         cPar = MSCpar(MSCircuit)
         nBitT = cPar.nBitT
@@ -22,8 +22,17 @@ function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nMeasure::In
         println("nMeasure=$(nMeasure) nTrain=$(nTrain) GDmethod=$(GDmethod)\n")
         println("Initial overlap = $(MStest(regTar, MSCircuit, nMeasure).overlap)")
     end
-    res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(regTar, MSCircuit, nMeasure), 
-                 Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    if useCuYao == false
+        res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(regTar, MSCircuit, nMeasure), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    else
+        cuReg0 = zero_state((vBit+rBit+1), nbatch=nMeasure) |> cu
+        cuRegT = repeat(copy(regTar), nMeasure) |> cu
+        cuRegA = join(cuReg0, cuRegT)
+        res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(cuRegA, MSCircuit), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    end
+    res
 end
 
 
@@ -38,14 +47,20 @@ function train!(nTrain::Int64, circuit0::ChainBlock; Tmethod::Function,
     GD = GDescent(GDmethod)
     tm=Tmethod(circuit0)
     witnessOp = matblock(diagm(0=>ones(1<<nqubits(tm.witnessOp))) - mat(tm.witnessOp))
+    nBitA = MSCpar(circuit0).nBitA
+    w2 = put(nBitA, 1=>I2)-tm.witnessOp
+    if mat(witnessOp) != mat(w2)
+        print("witnessOp not the same!!")
+    end
     circuit = circuit0
     dGates = collect_blocks(AbstractDiff, circuit)
     for i=1:nTrain
         if Gmethod == "Qdiff"
-            grads =  getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+            grads =  getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(put(nBitA, 1=>I2)-tm.witnessOp))
         elseif Gmethod == "Ndiff"
             grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=0.005)
         end 
+        print("GradsMean=$(mean(grads))\n")
         dGatesPar = [parameters(dGates[i])[1] for i=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 
         dispatch!.(dGates, dGatesPar)
