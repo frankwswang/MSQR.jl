@@ -24,11 +24,15 @@ pkg> add https://github.com/frankwswang/MPSCircuit.jl.git
 __Then use the same approach to install this project package:__
 ```
 pkg> add https://github.com/frankwswang/MSQR.jl.git
-``` 
-__ATTENTION:__ This packge is dependent on package [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. For the future development, you need to check its compatibility if you want to use it with a higher version of __Yao__. 
+```  
 
 ## How to use
-Please type `using MPSCircuit ` and `using MSQR` to use any functions of this package. If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may also install CUDA-supported version of Yao: __[CuYao](https://github.com/QuantumBFS/CuYao.jl)__ to gain significant calculation acceleration for MSQR. After properly installing __CuYao__, you just need to type `using CuYao` before using any functions of MSQR. 
+Please type `using MPSCircuit` and `using MSQR` to use any functions of this package. __Yao__ is dependent on a Julia Quantum Computation Simulation Framework package called [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. You may type `using Yao` in order to combine __MSQR__'s functionality with __Yao__ to realize other Quantum Computation Simulations.   
+
+## CUDA GPU support 
+If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may also install CUDA-supported version of Yao: __[CuYao](https://github.com/QuantumBFS/CuYao.jl)__ to gain significant calculation acceleration for MSQR. 
+
+After properly installing __CuYao__ and type `using CuYao`, you can use following MSQR internal function
 
 ## Examples 
 * __MSTest.jl:__ Showing the function of `MPSSwapTest`.

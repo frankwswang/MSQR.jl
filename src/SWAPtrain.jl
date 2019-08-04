@@ -5,61 +5,93 @@ export SWAPtest, SWAPtrain!
 
 
 """
-    SWAPtest(reg0::DefaultRegister, regT::DefaultRegister, nMeasure::Int64; ϕ::Real=0)
-SWAP test function which get the overlap between target register(regT) and generated register(reg0).
-\nFields:
+    SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}    
+Fields:
 \n`overlap::Float64`:     Overlap bewteen generated register and target register.
 \n`witnessOp::PutBlock`:  The witness(measure) operator of the `SWAPtest` circuit.
 \n`reg::DefaultRegister`: The register goes through `SWAPtest`. nqubits(SWAPtest.reg) = 1 + 2*nBitT.
 \n`circuit::ChainBlock`:  Circuit of `SWAPtest`.
 """
-struct SWAPtest
+struct SWAPtestRes
     overlap::Float64     # Overlap bewteen generated register and target register.
     witnessOp::PutBlock  # The witness(measure) operator of the `SWAPtest` circuit.
     reg::DefaultRegister # The register goes through `SWAPtest`. nqubits(SWAPtest.reg) = 1 + 2*nBitT.
     circuit::ChainBlock  # Circuit of `SWAPtest`.
-
-    function SWAPtest(reg0::DefaultRegister, regT::DefaultRegister, nMeasure::Int64; ϕ::Real=0)
-        reg1 = repeat(copy(reg0), nMeasure)
-        reg2 = repeat(copy(regT), nMeasure)
-        nBitT = nqubits(reg2)
-        nBitA = nBitT*2 + 1
-        witnessOp = put(nBitA, nBitA=>Z)
-        SWAPblock = chain(nBitA, [control(nBitA, nBitA, (i,i-nBitT)=>ConstGate.SWAP) for i=nBitA-1:-1:nBitT+1])
-        cSWAP = chain(nBitA, put(nBitA, nBitA=>H), put(nBitA, nBitA=>shift(ϕ)), SWAPblock, put(nBitA, nBitA=>H))
-        reg = join(repeat(zero_state(1),nMeasure), reg1)
-        reg = join(reg, reg2)
-        reg |> cSWAP
-        overlaps = expect(witnessOp, reg)
-        overlap = mean(overlaps) |> real
-        new(overlap, witnessOp, reg, cSWAP)
-    end
-
-    function SWAPtest(regT::DefaultRegister, circuit::ChainBlock, nMeasure::Int64; ϕ::Real=0)
-        reg0 = zero_state(nqubits(regT))
-        reg1 = repeat(copy(reg0 |> circuit), nMeasure)
-        reg2 = repeat(copy(regT), nMeasure)
-        nBitT = nqubits(reg2)
-        nBitA = nBitT*2 + 1
-        witnessOp = put(nBitA, nBitA=>Z)
-        SWAPblock = chain(nBitA, [control(nBitA, nBitA, (i,i-nBitT)=>ConstGate.SWAP) for i=nBitA-1:-1:nBitT+1])
-        cSWAP = chain(nBitA, put(nBitA, nBitA=>H), put(nBitA, nBitA=>shift(ϕ)), SWAPblock, put(nBitA, nBitA=>H))
-        reg = join(repeat(zero_state(1),nMeasure), reg1)
-        reg = join(reg, reg2)
-        reg |> cSWAP
-        overlaps = expect(witnessOp, reg)
-        overlap = mean(overlaps) |> real
-        new(overlap, witnessOp, reg, cSWAP)
-    end
 end
 
 
 """
-    SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nMeasure::Int64, nTrain::Int64; Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false) -> overlaps::Array{Float64,1}
+    SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    ->
+    SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
+SWAP test function which get the overlap between target register(regT) and generated register(reg0).
+\n`regG::DefaultRegister`: Generated quantum state to compare with target quantum state.
+\n`regT::DefaultRegister`: Target quantum state.
+"""
+function SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    nMcheck(nMeasure, regG, regT)
+    reg1 = repeat(copy(regG), nMeasure)
+    # print("The nbatch of reg1 is: $(nbatch(reg1))\n")
+    reg2 = repeat(copy(regT), nMeasure)
+    # print("The nbatch of reg1 is: $(nbatch(reg2))\n")
+    reg0 = zero_state(1, nbatch=nMeasure)
+    # print("The nbatch of reg0 is: $(nbatch(reg0))\n")
+    regA = join(reg0, reg1, reg2)
+    useCuYao && (regA = regA |> cu)
+    resS = SWAPtest(regA, ϕ=ϕ)
+    useCuYao && (regA = resS.reg |> cpu)
+    SWAPtestRes(resS.overlap, resS.witnessOp, regA, resS.circuit)
+end
+"""
+    SWAPtest(regA::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0)
+    ->
+    SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
+Method 2 of `SWAPtest`:
+\n`regA::DefaultRegister`: Input register(state) for SWAP Test circuit. `regA = join(zero_state(1), reg1, reg2)`
+"""
+function SWAPtest(regA::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0)
+    regA = copy(repeat(regA, nMeasure))
+    nBitA = nqubits(regA)
+    nBitT = Int((nBitA - 1) / 2)
+    witnessOp = put(nBitA, nBitA=>Z)
+    SWAPblock = chain(nBitA, [control(nBitA, nBitA, (i,i-nBitT)=>ConstGate.SWAP) for i=nBitA-1:-1:nBitT+1])
+    SWAPcircuit = chain(nBitA, put(nBitA, nBitA=>H), put(nBitA, nBitA=>shift(ϕ)), SWAPblock, put(nBitA, nBitA=>H))
+    regA |> SWAPcircuit
+    overlaps = expect(witnessOp, regA)
+    overlap = mean(overlaps) |> real
+    SWAPtestRes(overlap, witnessOp, regA, SWAPcircuit)
+end
+"""
+    SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    ->
+    SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
+Method 3 of `SWAPtest`:
+`regTar::DefaultRegister`: Target quantum state.
+`circuit::ChainBlock`: circuit to generate the state(regG) to compare with `regTar`.
+"""
+function SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    n = nqubits(regTar)
+    regT = copy(regTar)
+    regG = zero_state(nqubits(regT)) |> circuit
+    SWAPtest(regG, regT, nMeasure=nMeasure, ϕ=ϕ, useCuYao=useCuYao)
+end
+function SWAPtest(circuit::ChainBlock; regAll::DefaultRegister, nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    nMcheck(nMeasure, regAll)
+    regA = copy(regAll)
+    nBitT = Int((nqubits(regA) - 1) / 2)
+    regA |> focus!(nBitT+1:2nBitT...) |> circuit |> relax!(nBitT+1:2nBitT...)
+    SWAPtest(regA, nMeasure=nMeasure, ϕ=ϕ)
+end
+
+
+"""
+    SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false) 
+    -> 
+    overlaps::Array{Float64,1}
 SWAP-Test training function. This function will change the parameters of differentiable gates in circuit.
 """
-function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nMeasure::Int64, nTrain::Int64;
-                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false)
+function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
+                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false)
     if show
         cPar = MPSDCpar(circuit)
         nBitT = cPar.nBitA
@@ -69,8 +101,13 @@ function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nMeasure::Int6
         println("\nSWAP Training Parameters:")
         println("nBitT=$(nBitT) vBit=$(vBit) rBit=$(rBit) depth=$(depth)")
         println("nMeasure=$(nMeasure) nTrain=$(nTrain) GDmethod=$(GDmethod)\n")
-        println("Initial overlap = $(SWAPtest(regTar, circuit, nMeasure).overlap)")
+        println("Initial overlap = $(SWAPtest(regTar, circuit, nMeasure=nMeasure, useCuYao=useCuYao).overlap)")
     end
-    res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(regTar, circuit, nMeasure), 
+    reg = zero_state(nqubits(regTar)+1, nbatch = nMeasure)
+    regT = repeat(regTar, nMeasure)
+    regA = copy(join(reg, regT))
+    useCuYao == true && (regA = regA |> cu)
+    res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
                  Gmethod=Gmethod, GDmethod=GDmethod, show=show)
 end
+

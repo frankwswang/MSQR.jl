@@ -6,61 +6,54 @@ export MSQRtrain!, GDescent
 
 
 """
-    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nMeasure::Int64, nTrain::Int64; Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false) -> overlaps::Array{Float64,1}
+    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false) 
+    -> 
+    overlaps::Array{Float64,1}
 MSQR training function. This function will change the parameters of differentiable gates in MSCircuit.
 """
-function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nMeasure::Int64, nTrain::Int64;
+function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
                     Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false)
+    cPar = MSCpar(MSCircuit)
+    vBit = cPar.vBit
+    rBit = cPar.rBit
     if show
-        cPar = MSCpar(MSCircuit)
         nBitT = cPar.nBitT
-        vBit = cPar.vBit
-        rBit = cPar.rBit
         depth = cPar.depth
         println("\nMSQR Training Parameters:")
         println("nBitT=$(nBitT) vBit=$(vBit) rBit=$(rBit) depth=$(depth)")
         println("nMeasure=$(nMeasure) nTrain=$(nTrain) GDmethod=$(GDmethod)\n")
-        println("Initial overlap = $(MStest(regTar, MSCircuit, nMeasure).overlap)")
+        println("Initial overlap = $(MStest(regTar, MSCircuit, nMeasure=nMeasure, useCuYao=useCuYao).overlap)")
     end
-    if useCuYao == false
-        res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(regTar, MSCircuit, nMeasure), 
-                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
-    else
-        cuReg0 = zero_state((vBit+rBit+1), nbatch=nMeasure) |> cu
-        cuRegT = repeat(copy(regTar), nMeasure) |> cu
-        cuRegA = join(cuReg0, cuRegT)
-        res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(cuRegA, MSCircuit), 
-                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
-    end
+    reg0 = zero_state((vBit+rBit+1), nbatch=nMeasure)
+    regT = repeat(copy(regTar), nMeasure)
+    regA = join(reg0, regT)
+    useCuYao == true && (regA = regA |> cu)
+    res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(MSCircuit, regAll=regA), 
+                    Gmethod=Gmethod, GDmethod=GDmethod, show=show)
     res
 end
 
 
 """
-    train!(nTrain::Int64, circuit0::ChainBlock; Tmethod::Function, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false) -> overlaps::Array{Float64,1}
+    train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false) 
+    -> 
+    overlaps::Array{Float64,1}
 Function that trains parameters of differentiable gates in the input circuit with designated overlap method 
 in order to make the circuit generate a similar wave function to the target wave function. 
 """
-function train!(nTrain::Int64, circuit0::ChainBlock; Tmethod::Function, 
+function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function, 
                 Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false)
     overlaps = Float64[]
     GD = GDescent(GDmethod)
-    tm=Tmethod(circuit0)
-    witnessOp = matblock(diagm(0=>ones(1<<nqubits(tm.witnessOp))) - mat(tm.witnessOp))
-    nBitA = MSCpar(circuit0).nBitA
-    w2 = put(nBitA, 1=>I2)-tm.witnessOp
-    if mat(witnessOp) != mat(w2)
-        print("witnessOp not the same!!")
-    end
-    circuit = circuit0
+    tm=Tmethod(circuit)
+    witnessOp = put(nqubits(tm.witnessOp), 1=>I2) - tm.witnessOp
     dGates = collect_blocks(AbstractDiff, circuit)
     for i=1:nTrain
         if Gmethod == "Qdiff"
-            grads =  getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(put(nBitA, 1=>I2)-tm.witnessOp))
+            grads =  getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod == "Ndiff"
             grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=0.005)
         end 
-        print("GradsMean=$(mean(grads))\n")
         dGatesPar = [parameters(dGates[i])[1] for i=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 
         dispatch!.(dGates, dGatesPar)
@@ -76,7 +69,9 @@ end
 
 
 """
-    GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}}) -> reF::Function
+    GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}}) 
+    -> 
+    reF::Function
 Function that returns the aimed Gradient Descent method.
 """
 function GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}})
