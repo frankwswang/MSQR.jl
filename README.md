@@ -1,5 +1,5 @@
 # MSQR.jl
-__MSQR__ is the short form for __M__PS-__S__WAP-test hybrid structural __Q__uantum state __R__econstruction algorithm.
+__MSQR__ is the short form for __MPS-SWAP-test__ hybrid structural __Quantum__ state __Reconstruction__ algorithm.
 
 ## Main functions
 ### MScircuit
