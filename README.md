@@ -1,5 +1,5 @@
 # MSQR.jl
-Qubit-state Reconstruction algorithm based on MPS-SwapTest hybrid method.
+__MSQR__ is the short form for __M__PS-__S__WAP-test hybrid structural __Q__uantum state __R__econstruction algorithm.
 
 ## Main functions
 ### MScircuit
@@ -13,7 +13,7 @@ Combining MPS-Swap Test method and Quantum Gradient Optimization, MSQR can train
 
 ## Setup Guide
 ### Julia Environment
-* [__Julia 1.1.1__](https://julialang.org)
+* [__Julia 1.1__](https://julialang.org)
 
 ### Installation
 __Please first install another unregistered package [MPSCircuit](https://github.com/frankwswang/MPSCircuit.jl).__
@@ -27,12 +27,14 @@ pkg> add https://github.com/frankwswang/MSQR.jl.git
 ```  
 
 ## How to use
-Please type `using MPSCircuit` and `using MSQR` to use any functions of this package. __Yao__ is dependent on a Julia Quantum Computation Simulation Framework package called [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. You may type `using Yao` in order to combine __MSQR__'s functionality with __Yao__ to realize other Quantum Computation Simulations.   
-
-## CUDA GPU support 
-If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may also install CUDA-supported version of Yao: __[CuYao](https://github.com/QuantumBFS/CuYao.jl)__ to gain significant calculation acceleration for MSQR. 
-
-After properly installing __CuYao__ and type `using CuYao`, you can use following MSQR internal function
+Please type `using MPSCircuit` and `using MSQR` to use any functions of this package. __Yao__ is dependent on a Julia Quantum Computation Simulation Framework package called [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. You may type `using Yao` in order to combine MSQR's functionality with __Yao__ to realize other Quantum Computation Simulations.   
+### CUDA GPU support 
+If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may also install CUDA-supported version of Yao: __[CuYao](https://github.com/QuantumBFS/CuYao.jl)__ to gain significant calculation acceleration for MSQR. After properly installing __CuYao__ and type `using CuYao`, you can use following MSQR internal functions:
+* __MSQRtrain!__
+* __SWAPtrain!__
+* __SWAPtest__
+* __MSTtest__
+* __MStest__
 
 ## Examples 
 * __MSTest.jl:__ Showing the function of `MPSSwapTest`.
