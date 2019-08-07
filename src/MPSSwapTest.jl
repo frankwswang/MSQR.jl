@@ -82,13 +82,13 @@ end
 
 
 """
-    MStest(regT::DefaultRegister, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=false) 
+    MStest(regT::DefaultRegister, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON) 
     -> 
     MStestRes{reg::DefaultRegister, witnessOp::PutBlock, overlap::Float64}
 Return the main structure of MPS-Swap Test algorithm.
 \n `regT::DefaultRegister`: Target quantum state.
 """
-function MStest(regT::DefaultRegister, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=false)
+function MStest(regT::DefaultRegister, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     nMcheck(nMeasure, regT)
     nBitA = MSCpar(MSCircuit).nBitA
     nBitT = nqubits(regT)  
@@ -134,12 +134,12 @@ end
 
 
 """
-    MSTtest(regT::DefaultRegister, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=false) 
+    MSTtest(regT::DefaultRegister, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON) 
     -> 
     MSTtestRes{Aoverlap::Float64, Eoverlap::Float64, error::Float64}
 Test function that verify the validity of MPS-Swap Test algorithm.
 """
-function MSTtest(regT::DefaultRegister, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=false)             
+function MSTtest(regT::DefaultRegister, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)             
     MSTres = MStest(regT, MSCircuit, nMeasure=nMeasure, useCuYao=useCuYao)
     ActualOverlap = MSTres.overlap
     regG = zero_state(nqubits(regT))
@@ -161,3 +161,7 @@ function nMcheck(nMeasure::Int64, regs::DefaultRegister...)
               \nNow the actual Measure Times = nMeasure*nbatch(reg).\n")
     end
 end
+
+
+# Default setting of CuYao(CUDA) support is off.
+CUDA_ON = false

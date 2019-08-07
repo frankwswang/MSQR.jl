@@ -21,14 +21,14 @@ end
 
 
 """
-    SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=CUDA_ON)
     ->
     SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
 SWAP test function which get the overlap between target register(regT) and generated register(reg0).
 \n`regG::DefaultRegister`: Generated quantum state to compare with target quantum state.
 \n`regT::DefaultRegister`: Target quantum state.
 """
-function SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+function SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=CUDA_ON)
     nMcheck(nMeasure, regG, regT)
     reg1 = repeat(copy(regG), nMeasure)
     # print("The nbatch of reg1 is: $(nbatch(reg1))\n")
@@ -62,20 +62,20 @@ function SWAPtest(regA::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0)
     SWAPtestRes(overlap, witnessOp, regA, SWAPcircuit)
 end
 """
-    SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+    SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=CUDA_ON)
     ->
     SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
 Method 3 of `SWAPtest`:
 `regTar::DefaultRegister`: Target quantum state.
 `circuit::ChainBlock`: circuit to generate the state(regG) to compare with `regTar`.
 """
-function SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+function SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=CUDA_ON)
     n = nqubits(regTar)
     regT = copy(regTar)
     regG = zero_state(nqubits(regT)) |> circuit
     SWAPtest(regG, regT, nMeasure=nMeasure, ϕ=ϕ, useCuYao=useCuYao)
 end
-function SWAPtest(circuit::ChainBlock; regAll::DefaultRegister, nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=false)
+function SWAPtest(circuit::ChainBlock; regAll::DefaultRegister, nMeasure::Int64=1, ϕ::Real=0)
     nMcheck(nMeasure, regAll)
     regA = copy(regAll)
     nBitT = Int((nqubits(regA) - 1) / 2)
@@ -85,13 +85,13 @@ end
 
 
 """
-    SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false) 
+    SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
     -> 
     overlaps::Array{Float64,1}
 SWAP-Test training function. This function will change the parameters of differentiable gates in circuit.
 """
 function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
-                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false)
+                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     if show
         cPar = MPSDCpar(circuit)
         nBitT = cPar.nBitA

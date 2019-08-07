@@ -6,13 +6,13 @@ export MSQRtrain!, GDescent
 
 
 """
-    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false) 
+    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
     -> 
     overlaps::Array{Float64,1}
 MSQR training function. This function will change the parameters of differentiable gates in MSCircuit.
 """
 function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
-                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=false)
+                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     cPar = MSCpar(MSCircuit)
     vBit = cPar.vBit
     rBit = cPar.rBit
@@ -30,19 +30,18 @@ function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int6
     useCuYao == true && (regA = regA |> cu)
     res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(MSCircuit, regAll=regA), 
                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
-    res
 end
 
 
 """
-    train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false) 
+    train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function, Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false) 
     -> 
     overlaps::Array{Float64,1}
 Function that trains parameters of differentiable gates in the input circuit with designated overlap method 
 in order to make the circuit generate a similar wave function to the target wave function. 
 """
 function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function, 
-                Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false)
+                Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false)
     overlaps = Float64[]
     GD = GDescent(GDmethod)
     tm=Tmethod(circuit)
@@ -52,7 +51,9 @@ function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function,
         if Gmethod == "Qdiff"
             grads =  getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod == "Ndiff"
-            grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=0.005)
+            grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=0.01)
+        elseif Gmethod[1] == "Ndiff"
+            grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=Gmethod[2])
         end 
         dGatesPar = [parameters(dGates[i])[1] for i=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 

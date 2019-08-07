@@ -1,11 +1,6 @@
-push!(LOAD_PATH, abspath("src"))
-push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
+# push!(LOAD_PATH, abspath("src"))
+# push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
 using Yao, MSQR, MPSCircuit
-CUDA_ON = false
-
-# Cancel the comments if you successfully installed CuYao and want to use it for GPU acceleration.
-using CuYao
-CUDA_ON = true
 
 # Basic parameters.
 nBitT = 4

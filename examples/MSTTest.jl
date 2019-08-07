@@ -1,10 +1,6 @@
 # push!(LOAD_PATH, abspath("./src"))
 # push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
 using Test, Yao, MSQR, MPSCircuit
-CUDA_ON = false
-
-# Cancel the comment if you successfully installed CuYao and want to use it for GPU acceleration.
-# using CuYao; CUDA_ON = true
 
 @testset "MPS-Swap Test Reliability Check" begin
 
