@@ -1,8 +1,6 @@
 # push!(LOAD_PATH, abspath("./src"))
 # push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
-using Test, Yao, MSQR, MPSCircuit
-
-@testset "MPS-Swap Test Reliability Check" begin
+using Yao, MSQR, MPSCircuit
 
 # MS Test of Cluster State.
 nMeasure = 20000
@@ -17,11 +15,11 @@ test1 = MSTtest(regTar, circuit, MPSGen.cExtend, nMeasure=nMeasure)
 ExpectOverlap = test1.Eoverlap
 ActualOverlap = test1.Aoverlap
 println("ExpectOverlap: $(ExpectOverlap)\nActualOverlap: $(ActualOverlap)")
-@test isapprox.(ActualOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
+@show isapprox.(ActualOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
 ## MS Test of Extended MPS Cluster-state circuit.
 ExtendOverlap = SWAPtest(zero_state(nBitT)|>MPSGen.cExtend, regTar, nMeasure=nMeasure).overlap
 println("ExtendOverlap: $(ExtendOverlap)\n")
-@test isapprox.(ExtendOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
+@show isapprox.(ExtendOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
 
 # MS Test of differentiable quantum state.
 nMeasure = 20000
@@ -37,10 +35,8 @@ test2 = MSTtest(regTar, circuit, MPSGen.cExtend, nMeasure=nMeasure)
 ExpectOverlap = test2.Eoverlap
 ActualOverlap = test2.Aoverlap
 println("ExpectOverlap: $(ExpectOverlap)\nActualOverlap: $(ActualOverlap)")
-@test isapprox.(ActualOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
+@show isapprox.(ActualOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
 ## MS Test of Extended MPS differentiable circuit.
 ExtendOverlap = SWAPtest(zero_state(nBitT)|>MPSGen.cExtend, regTar, nMeasure=nMeasure).overlap
 println("ExtendOverlap: $(ExtendOverlap)\n")
-@test isapprox.(ExtendOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
-
-end
+@show isapprox.(ExtendOverlap, ExpectOverlap, atol=0.05*ExpectOverlap)
