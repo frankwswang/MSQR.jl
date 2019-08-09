@@ -23,12 +23,12 @@ nTrain2 = 20
 # Training Program.
 ## ADAM based SGD method.
 ### MSQR training.
-MSQRtrain!(regTar, deepcopy(circuit), nTrain1, nMeasure=nMeasure, GDmethod = method1, show=true, useCuYao=CUDA_ON)
+MSQRtrain!(regTar, deepcopy(circuit), nTrain1, nMeasure=nMeasure, GDmethod = method1, show=true)
 ### SWAP Test + SGD training.
-SWAPtrain!(regTar, deepcopy(MPSGen.cExtend), nTrain1, nMeasure=nMeasure, GDmethod = method1, show=true, useCuYao=CUDA_ON)
+SWAPtrain!(regTar, deepcopy(MPSGen.cExtend), nTrain1, nMeasure=nMeasure, GDmethod = method1, show=true)
 
 ## default SGD method.
 ### MSQR training.
-MSQRtrain!(regTar, deepcopy(circuit), nTrain2, nMeasure=nMeasure, GDmethod = method2, show=true, useCuYao=CUDA_ON)
+MSQRtrain!(regTar, deepcopy(circuit), nTrain2, nMeasure=nMeasure, GDmethod = method2, show=true)
 ### SWAP Test + SGD training.
-SWAPtrain!(regTar, deepcopy(MPSGen.cExtend), nTrain2, nMeasure=nMeasure, GDmethod = method2, show=true, useCuYao=CUDA_ON)
+SWAPtrain!(regTar, deepcopy(MPSGen.cExtend), nTrain2, nMeasure=nMeasure, GDmethod = method2, show=true)
