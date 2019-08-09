@@ -1,7 +1,7 @@
 #=
 Normal SWAP-Test algorithm related Functions that help verify the validity of MSQR training results.
 =#
-export SWAPtest, SWAPtrain!
+export SWAPtest, SWAPtrain!, SWAPtestRes
 
 
 """
@@ -31,15 +31,13 @@ SWAP test function which get the overlap between target register(regT) and gener
 function SWAPtest(regG::DefaultRegister, regT::DefaultRegister; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=CUDA_ON)
     nMcheck(nMeasure, regG, regT)
     reg1 = repeat(copy(regG), nMeasure)
-    # print("The nbatch of reg1 is: $(nbatch(reg1))\n")
     reg2 = repeat(copy(regT), nMeasure)
-    # print("The nbatch of reg1 is: $(nbatch(reg2))\n")
     reg0 = zero_state(1, nbatch=nMeasure)
-    # print("The nbatch of reg0 is: $(nbatch(reg0))\n")
     regA = join(reg0, reg1, reg2)
     useCuYao && (regA = regA |> cu)
     resS = SWAPtest(regA, ϕ=ϕ)
-    useCuYao && (regA = resS.reg |> cpu)
+    regA = resS.reg
+    useCuYao && (regA = regA |> cpu)
     SWAPtestRes(resS.overlap, resS.witnessOp, regA, resS.circuit)
 end
 """
@@ -91,7 +89,7 @@ end
 SWAP-Test training function. This function will change the parameters of differentiable gates in circuit.
 """
 function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
-                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
+                    Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     if show
         cPar = MPSDCpar(circuit)
         nBitT = cPar.nBitA
@@ -110,4 +108,3 @@ function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64;
     res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
                  Gmethod=Gmethod, GDmethod=GDmethod, show=show)
 end
-

@@ -12,7 +12,7 @@ export MSQRtrain!, GDescent
 MSQR training function. This function will change the parameters of differentiable gates in MSCircuit.
 """
 function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
-                    Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
+                    Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     cPar = MSCpar(MSCircuit)
     vBit = cPar.vBit
     rBit = cPar.rBit
@@ -49,11 +49,11 @@ function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function,
     dGates = collect_blocks(AbstractDiff, circuit)
     for i=1:nTrain
         if Gmethod == "Qdiff"
-            grads =  getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+            grads = getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod == "Ndiff"
-            grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=0.01)
+            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod[1] == "Ndiff"
-            grads = -getNdiff.(()->Tmethod(circuit).overlap, dGates, δ=Gmethod[2])
+            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
         end 
         dGatesPar = [parameters(dGates[i])[1] for i=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 

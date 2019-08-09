@@ -10,7 +10,7 @@ depth = 2
 nMeasure = 2000
 regTar = rand_state(nBitT)
 MPSGen = MPSC(("DC",depth),nBitT,vBit,rBit)
-circuit = MScircuit(nBitT, vBit, rBit, MPSGen.cBlocks)
+circuit = MScircuit(nBitT, vBit, rBit, MPSGen.mpsBlocks)
 
 # Setup Training environments
 ## Gradient Optimization using ADAM algorithm(https://arxiv.org/abs/1412.6980v8).

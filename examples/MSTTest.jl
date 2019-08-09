@@ -12,7 +12,7 @@ rBit = 1
 
 regTar = rand_state(nBitT)
 MPSGen = MPSC("CS", nBitT, vBit, rBit)
-circuit = MScircuit(nBitT, vBit, rBit, MPSGen.cBlocks)
+circuit = MScircuit(nBitT, vBit, rBit, MPSGen.mpsBlocks)
 test1 = MSTtest(regTar, circuit, MPSGen.cExtend, nMeasure=nMeasure, useCuYao=CUDA_ON)
 ExpectOverlap = test1.Eoverlap
 ActualOverlap = test1.Aoverlap
@@ -32,7 +32,7 @@ depth = 5
 
 regTar = rand_state(nBitT)
 MPSGen = MPSC(("DC",depth),nBitT,vBit,rBit)
-circuit = MScircuit(nBitT, vBit, rBit, MPSGen.cBlocks)
+circuit = MScircuit(nBitT, vBit, rBit, MPSGen.mpsBlocks)
 test2 = MSTtest(regTar, circuit, MPSGen.cExtend, nMeasure=nMeasure, useCuYao=CUDA_ON)
 ExpectOverlap = test2.Eoverlap
 ActualOverlap = test2.Aoverlap

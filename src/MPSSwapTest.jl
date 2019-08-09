@@ -44,7 +44,7 @@ end
 Function to build quantum circuit for MPS-Swap Test.
 """
 function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, MPSblocks::Array{CompositeBlock,1}; ϕ::Float64=0.0)
-    par2nd = setMPSpar(nBitT, vBit, rBit)
+    par2nd = MPSpar(nBitT, vBit, rBit)
     nBlock = par2nd.nBlock
     nBitG = par2nd.nBit
     nBitA = 1 + nBitG + nBitT 
@@ -52,11 +52,12 @@ function MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, MPSblocks::Array{Comp
     push!(Cblocks, put(nBitA, nBitA=>H))
     push!(Cblocks, put(nBitA, nBitA=>shift(ϕ)))
     for i = 1:nBlock
-        MPSblock = put(nBitA, Tuple( (nBitT+1):(nBitA-1), )=>MPSblocks[i] )
+        # MPSblock = put(nBitA, Tuple( (nBitT+1):(nBitA-1), )=>MPSblocks[i] ) #Use `concentrate` instead of `put` for CuYao compatibility and efficiency.
+        MPSblock = concentrate( nBitA, MPSblocks[i], (nBitT+1):(nBitA-1) )
         SWAPblock = chain(nBitA, [control(nBitA, nBitA, ( (nBitA-1-irBit), (nBitT-(i-1)*rBit-irBit) )=>SWAP) for irBit = 0:rBit-1])
         OpBlock = chain(nBitA, MPSblock, SWAPblock)
         push!(Cblocks, OpBlock)
-        MeasureBlock = Measure(nBitA; locs=(nBitT+vBit+1):(nBitA-1), collapseto=0)
+        MeasureBlock = Measure(nBitA, locs=(nBitT+vBit+1):(nBitA-1), collapseto=0)
         push!(Cblocks, MeasureBlock)
     end
     SWAPvBit = chain(nBitA, [control(nBitA, nBitA, ( (nBitT+i),i )=>SWAP) for i=vBit:-1:1])
