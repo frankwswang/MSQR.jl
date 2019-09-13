@@ -64,8 +64,8 @@ end
     ->
     SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
 Method 3 of `SWAPtest`:
-`regTar::DefaultRegister`: Target quantum state.
-`circuit::ChainBlock`: circuit to generate the state(regG) to compare with `regTar`.
+\n`regTar::DefaultRegister`: Target quantum state.
+\n`circuit::ChainBlock`: circuit to generate the state(regG) to compare with `regTar`.
 """
 function SWAPtest(regTar::DefaultRegister, circuit::ChainBlock; nMeasure::Int64=1, ϕ::Real=0, useCuYao::Bool=CUDA_ON)
     n = nqubits(regTar)
@@ -83,12 +83,12 @@ end
 
 
 """
-    SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
+    SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
     -> 
     overlaps::Array{Float64,1}
-SWAP-Test training function. This function will change the parameters of differentiable gates in circuit.
+SWAP-Test training function. This function will change the parameters of differentiable gates in circuit. When set `nTrain = :auto`, trigger the automaic training ieration. 
 """
-function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
+function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
                     Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     if show
         cPar = MPSDCpar(circuit)
@@ -105,6 +105,12 @@ function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Int64;
     regT = repeat(regTar, nMeasure)
     regA = copy(join(reg, regT))
     useCuYao == true && (regA = regA |> cu)
-    res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
-                 Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    if typeof(nTrain) == Int64
+        res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    elseif nTrain == :auto
+        res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    end
+    res
 end

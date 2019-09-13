@@ -6,12 +6,12 @@ export MSQRtrain!, GDescent
 
 
 """
-    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
+    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
     -> 
     overlaps::Array{Float64,1}
-MSQR training function. This function will change the parameters of differentiable gates in MSCircuit.
+MSQR training function. This function will change the parameters of differentiable gates in MSCircuit. When set `nTrain = :auto`, trigger the automaic training ieration.
 """
-function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int64; nMeasure::Int64=1,
+function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
                     Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     cPar = MSCpar(MSCircuit)
     vBit = cPar.vBit
@@ -28,8 +28,14 @@ function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Int6
     regT = repeat(copy(regTar), nMeasure)
     regA = join(reg0, regT)
     useCuYao == true && (regA = regA |> cu)
-    res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(MSCircuit, regAll=regA), 
-                    Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    if typeof(nTrain) == Int64
+        res = train!(nTrain, MSCircuit, Tmethod = MSCircuit->MStest(MSCircuit, regAll=regA), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    elseif nTrain == :auto
+        res = train!(MSCircuit, Tmethod = MSCircuit->MStest(MSCircuit, regAll=regA), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+    end
+    res
 end
 
 
@@ -55,7 +61,7 @@ function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function,
         elseif Gmethod[1] == "Ndiff"
             grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
         end 
-        dGatesPar = [parameters(dGates[i])[1] for i=1:length(dGates)]
+        dGatesPar = [parameters(dGates[j])[1] for j=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 
         dispatch!.(dGates, dGatesPar)
         tm = Tmethod(circuit)
@@ -64,6 +70,49 @@ function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function,
             println("Training Step $(i), overlap = $(tm.overlap)")
         end
         push!(overlaps,tm.overlap)
+    end
+    overlaps
+end
+"""
+    train!(circuit::ChainBlock; Tmethod::Function, Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false) 
+    -> 
+    overlaps::Array{Float64,1}
+Method 2 of `train!`:
+\nAutomatically stop training when objective function reaches maximum value. 
+"""
+function train!(circuit::ChainBlock; Tmethod::Function, 
+                Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false)
+    overlaps = Float64[]
+    GD = GDescent(GDmethod)
+    tm=Tmethod(circuit)
+    witnessOp = put(nqubits(tm.witnessOp), 1=>I2) - tm.witnessOp
+    dGates = collect_blocks(AbstractDiff, circuit)
+    nTrain = 200
+    gap = 199
+    @label train
+    for i=nTrain-gap:nTrain
+        if Gmethod == "Qdiff"
+            grads = getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+        elseif Gmethod == "Ndiff"
+            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+        elseif Gmethod[1] == "Ndiff"
+            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
+        end 
+        dGatesPar = [parameters(dGates[j])[1] for j=1:length(dGates)]
+        dGatesPar = GD(dGatesPar, grads) 
+        dispatch!.(dGates, dGatesPar)
+        tm = Tmethod(circuit)
+        showCase = (25*i)%nTrain==0
+        if  showCase && show
+            println("Training Step $(i), overlap = $(tm.overlap)")
+        end
+        push!(overlaps,tm.overlap)
+    end
+    gap = 99
+    if abs(mean(overlaps[nTrain-199:nTrain-100]) - mean(overlaps[nTrain-99:nTrain])) > 5e-4 || 
+       abs(mean(overlaps[nTrain-199:nTrain-150]) - mean(overlaps[nTrain-49:nTrain])) > 8e-4 
+        nTrain = nTrain+100
+        @goto train
     end
     overlaps
 end
