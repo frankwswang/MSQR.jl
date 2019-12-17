@@ -5,7 +5,7 @@ export SWAPtest, SWAPtrain!, SWAPtestRes
 
 
 """
-    SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}    
+    SWAPtestRes{overlap::Float64, witnessOp::PutBlock, reg::DefaultRegister, circuit::ChainBlock}
 Fields:
 \n`overlap::Float64`:     Overlap bewteen generated register and target register.
 \n`witnessOp::PutBlock`:  The witness(measure) operator of the `SWAPtest` circuit.
@@ -95,7 +95,7 @@ function SWAPtrain!(regTar::DefaultRegister, circuit::ChainBlock, nTrain::Union{
         nBitT = cPar.nBitA
         vBit = cPar.vBit
         rBit = cPar.rBit
-        depth = cPar.depth 
+        depth = cPar.depth
         println("\nSWAP Training Parameters:")
         println("nBitT=$(nBitT) vBit=$(vBit) rBit=$(rBit) depth=$(depth)")
         println("nMeasure=$(nMeasure) nTrain=$(nTrain) GDmethod=$(GDmethod)\n")

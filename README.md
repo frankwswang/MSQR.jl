@@ -24,11 +24,19 @@ pkg> add https://github.com/frankwswang/MPSCircuit.jl.git
 __Then use the same approach to install this project package:__
 ```
 pkg> add https://github.com/frankwswang/MSQR.jl.git
-```  
+```
 
 ## How to use
-Please type `using MPSCircuit` and `using MSQR` to use any functions of this package. __Yao__ is dependent on a Julia Quantum Computation Simulation Framework package called [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. You may type `using Yao` in order to combine MSQR's functionality with __Yao__ to realize other Quantum Computation Simulations.   
-### CUDA GPU support 
+Please type `using MPSCircuit` and `using MSQR` to use any functions of this package. __Yao__ is dependent on a Julia Quantum Computation Simulation Framework package called [__Yao__](https://github.com/QuantumBFS/Yao.jl) and currently compatiple version is __Yao 0.5.0__. You may type `using Yao` in order to combine MSQR's functionality with __Yao__ to realize other Quantum Computation Simulations.
+
+### Recommended training configuration
+Hyperparameters | Values
+-------- | --------
+Measure Times | 5000
+SGD(ADAM) | η = 0.01 β = (0.9,0.999)
+Random Seed(Julia) | 1234
+
+### CUDA GPU support
 If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may also install CUDA-supported version of Yao: __[CuYao](https://github.com/QuantumBFS/CuYao.jl)__ to gain significant calculation acceleration for MSQR. After properly installing __CuYao__ and typing `using CuYao`, you can gain GPU acceleration(saved time may vary due to different models of GPU) calling each following functions:
 * __MSQRtrain!__
 * __SWAPtrain!__
@@ -36,13 +44,13 @@ If your GPU supports __[CUDA](https://developer.nvidia.com/cuda-gpus)__, you may
 * __MSTtest__
 * __MStest__
 
-If you want to manually switch off any above function's CUDA support, just add the optional function argument `useCuYao = false` when calling the function.  
+If you want to manually switch off any above function's CUDA support, just add the optional function argument `useCuYao = false` when calling the function.
 
-## Examples 
+## Examples
 * __MSTest.jl:__ Showing the function of `MPSSwapTest`.
 * __MSQRTest.jl:__ Showing a training example of `MSQR`.
 
-## Reference
+## References
 * Ekert, A. K., Alves, C. M., Oi, D. K., Horodecki, M., Horodecki, P., & Kwek, L. C. (2002). Direct estimations of linear and nonlinear functionals of a quantum state. Physical review letters, 88(21), 217901. ([DOI: 10.1103/PhysRevLett.88.217901](https://doi.org/10.1103/PhysRevLett.88.217901))
 
 * Liu, J. G., Zhang, Y. H., Wan, Y., & Wang, L. (2019). Variational Quantum Eigensolver with Fewer Qubits. arXiv preprint, [arXiv:1902.02663](https://arxiv.org/abs/1902.02663). ([PDF](https://arxiv.org/pdf/1902.02663.pdf))
