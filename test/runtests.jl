@@ -105,7 +105,7 @@ end
     # MStest(MSCircuit::ChainBlock; regAll::ArrayReg)
     # MSTtest(regT::ArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     ## MPSblcoks = MPSC("CS", 6, 1, 1).mpsBlocks
-    m = 3000
+    m = 1000
     n = 6
     v = 1
     r = 1
@@ -166,7 +166,7 @@ end
     c = MScircuit(n, v, r, mps.mpsBlocks)
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
-    m = 300
+    m = 250
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
@@ -205,7 +205,7 @@ end
 
     # If all the trainings converge in the end.
     cuti = 9 
-    tol = 0.05
+    tol = 0.075
     mres1qConv = mres1q[end-cuti:end]    # MSQR + ADAM + Qdiff
     mres2qConv = mres2q[end-cuti:end]    # MSQR + CONS + Qdiff
     sres1qConv = sres1q[end-cuti:end]    # SWAP + ADAM + Qdiff
@@ -235,7 +235,7 @@ end
 
     # If ADAM and default SGD converge to the approximately same value.
     ## (Including Ndiff and Qdiff situations)
-    tol2 = 0.05
+    tol2 = 0.075
     @test isapprox(mres1qMean, mres2qMean, atol=tol2*max( mres1qMean, mres2qMean ))
     @test isapprox(sres1qMean, sres2qMean, atol=tol2*max( sres1qMean, sres2qMean ))
     @test isapprox(mres1nMean, mres2nMean, atol=tol2*max( mres1nMean, mres2nMean ))
@@ -243,7 +243,7 @@ end
 
     # If MSQRtrain and SWAPtrain converge to the approximately same value.
     ## (Including Ndiff and Qdiff situations)
-    tol3 = 0.05
+    tol3 = 0.075
     @test isapprox(mres1qMean, sres1qMean, atol=tol3*max( mres1qMean, sres1qMean ))
     @test isapprox(mres2qMean, sres2qMean, atol=tol3*max( mres2qMean, sres2qMean ))
     @test isapprox(mres1nMean, sres1nMean, atol=tol3*max( mres1nMean, sres1nMean ))
