@@ -166,7 +166,7 @@ end
     c = MScircuit(n, v, r, mps.mpsBlocks)
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
-    m = 500
+    m = 300
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
