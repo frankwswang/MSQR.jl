@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, abspath("./src"))
-# push!(LOAD_PATH, abspath("../QMPS/src"))
+push!(LOAD_PATH, abspath("./src"))
+push!(LOAD_PATH, abspath("../QMPS/src"))
 using Test, QMPS, Yao, Random, Statistics
 using MSQR
 
@@ -166,7 +166,7 @@ end
     c = MScircuit(n, v, r, mps.mpsBlocks)
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
-    m = 1000
+    m = 500
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
