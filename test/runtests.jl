@@ -4,7 +4,7 @@ using Test, QMPS, Yao, Random, Statistics
 using MSQR
 
 # Un-comment if testing GPU acceleration compatibility.
-# using CuYao
+using CuYao
 
 @testset "SWAPtest(SWAPtrain.jl)" begin
     seedNum = 1234
@@ -105,7 +105,7 @@ end
     # MStest(MSCircuit::ChainBlock; regAll::ArrayReg)
     # MSTtest(regT::ArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     ## MPSblcoks = MPSC("CS", 6, 1, 1).mpsBlocks
-    m = 1000
+    m = 500
     n = 6
     v = 1
     r = 1
@@ -166,7 +166,7 @@ end
     c = MScircuit(n, v, r, mps.mpsBlocks)
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
-    m = 250
+    m = 200
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
