@@ -1,7 +1,6 @@
 # MSQR.jl
 
 [![Build Status](https://travis-ci.com/frankwswang/MSQR.jl.svg?branch=master)](https://travis-ci.com/frankwswang/MSQR.jl)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/MSQR.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/MSQR-jl)
 [![Coverage](https://codecov.io/gh/frankwswang/MSQR.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/MSQR.jl)
 
 __MSQR__ is the short form for __MPS-SWAP-test__ hybrid structural __Quantum__ state __Reconstruction__ algorithm.

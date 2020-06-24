@@ -7,21 +7,24 @@ julia:
   - 1.4
 os:
   - linux
-  - osx
   - windows
-
-notifications:
-  email: false
-
 arch:
   - x64
 cache:
   directories:
     - ~/.julia/artifacts
-script:
+env:
+  - TEST_SUITE=integration_tests
+  - TEST_SUITE=unit_tests
+script: bundle exec rake test:$TEST_SUITE
   - while sleep 30; do echo "still alive"; done &
   - julia -e 'using Pkg; Pkg.test("MSQR");'
 jobs:
+  include:
+    - stage: deploy
+      env: TEST_SUITE=none
+      install: skip # bundle install is not required
+      script: ./deploy.sh
   fast_finish: true
   # allow_failures:
   #   - julia: 1.3
