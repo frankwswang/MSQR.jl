@@ -4,7 +4,7 @@ using Test, QMPS, Yao, Random, Statistics
 using MSQR
 
 # Un-comment if testing GPU acceleration compatibility.
-using CuYao
+# using CuYao
 
 @testset "SWAPtest(SWAPtrain.jl)" begin
     seedNum = 1234
