@@ -1,15 +1,17 @@
-push!(LOAD_PATH, abspath("./src"))
-push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
-using Test, MSQR, MPSCircuit, Yao, Random, Statistics, Yao.ConstGate
-# Using CuYao to test GPU acceleration compatibility.
-using CuYao
-seedNum = 1234
+# push!(LOAD_PATH, abspath("./src"))
+# push!(LOAD_PATH, abspath("../QMPS/src"))
+using Test, QMPS, Yao, Random, Statistics
+using MSQR
+
+# Un-comment if testing GPU acceleration compatibility.
+# using CuYao
 
 @testset "SWAPtest(SWAPtrain.jl)" begin
+    seedNum = 1234
     m = 1
     n = 3
     Random.seed!(seedNum)
-    cgen = dispatch!(DCbuilder(n,4).Cblock, :random) 
+    cgen = dispatch!(DCbuilder(n,4).circuit, :random) 
     reg1 = rand_state(n)
     reg2 = rand_state(n)
     reg3 = zero_state(n) |> cgen  
@@ -43,6 +45,7 @@ seedNum = 1234
 end
 
 @testset "MPSSwapTest.jl" begin
+    seedNum = 1234
     # MScircuit(nBitT::Int64, vBit::Int64, rBit::Int64, MPSblocks::Array{CompositeBlock,1}; ϕ::Float64=0.0)
     ## MPSblcoks = MPSC("CS", 4, 1, 1).mpsBlocks 
     n0 = 4
@@ -53,15 +56,15 @@ end
     csMblocks = mps0cs.mpsBlocks
     CSc = MScircuit(n0, v0, r0, mps0cs.mpsBlocks)
     CSct = chain(7, put(7, 7=>H),
-                   chain(7, concentrate(7, csMblocks[1], 5:6), control(7, 7, (4,6)=>SWAP), Measure(7, locs=(6), collapseto=0)),
-                   chain(7, concentrate(7, csMblocks[2], 5:6), control(7, 7, (3,6)=>SWAP), Measure(7, locs=(6), collapseto=0)), 
-                   chain(7, concentrate(7, csMblocks[3], 5:6), control(7, 7, (2,6)=>SWAP), Measure(7, locs=(6), collapseto=0)),
+                   chain(7, subroutine(7, csMblocks[1], 5:6), control(7, 7, (4,6)=>SWAP), Measure(7, locs=(6), resetto=0)),
+                   chain(7, subroutine(7, csMblocks[2], 5:6), control(7, 7, (3,6)=>SWAP), Measure(7, locs=(6), resetto=0)), 
+                   chain(7, subroutine(7, csMblocks[3], 5:6), control(7, 7, (2,6)=>SWAP), Measure(7, locs=(6), resetto=0)),
                    control(7, 7, (1,5)=>SWAP),
                    put(7, 7=>H))           
     opx(n) = chain(n, [put(n, i=>X) for i=1:n])
     opy(n) = chain(n, [put(n, i=>Y) for i=1:n])
     opz(n) = chain(n, [put(n, i=>Z) for i=1:n])
-    function cr_test(reg::DefaultRegister, cr::CompositeBlock, crt::CompositeBlock)
+    function cr_test(reg::ArrayReg, cr::CompositeBlock, crt::CompositeBlock)
         n = nqubits(reg)
         Random.seed!(seedNum)
         reg1x = expect(opx(n), copy(reg) |> cr) |> mean |> real
@@ -80,6 +83,7 @@ end
         @test reg1z ≈ reg2z
     end
     cr_test(repeat(join(zero_state(3),rand_state(4)),5000), CSc, CSct)
+    
     ## MPSblcoks = MPSC(("DC",2), 8, 2, 2).mpsBlocks
     n1 = 8
     v1 = 2
@@ -90,18 +94,18 @@ end
     dcMblocks = mps0dc.mpsBlocks
     DCc = MScircuit(n1, v1, r1, mps0dc.mpsBlocks)
     DCct = chain(13, put(13, 13=>H),
-                     chain(13, concentrate(13, dcMblocks[1], 9:12), control(13, 13, (12, 8)=>SWAP), control(13, 13, (11, 7)=>SWAP), Measure(13, locs=(11,12), collapseto=0)),
-                     chain(13, concentrate(13, dcMblocks[2], 9:12), control(13, 13, (12, 6)=>SWAP), control(13, 13, (11, 5)=>SWAP), Measure(13, locs=(11,12), collapseto=0)),
-                     chain(13, concentrate(13, dcMblocks[3], 9:12), control(13, 13, (12, 4)=>SWAP), control(13, 13, (11, 3)=>SWAP), Measure(13, locs=(11,12), collapseto=0)),
+                     chain(13, subroutine(13, dcMblocks[1], 9:12), control(13, 13, (12, 8)=>SWAP), control(13, 13, (11, 7)=>SWAP), Measure(13, locs=(11,12), resetto=0)),
+                     chain(13, subroutine(13, dcMblocks[2], 9:12), control(13, 13, (12, 6)=>SWAP), control(13, 13, (11, 5)=>SWAP), Measure(13, locs=(11,12), resetto=0)),
+                     chain(13, subroutine(13, dcMblocks[3], 9:12), control(13, 13, (12, 4)=>SWAP), control(13, 13, (11, 3)=>SWAP), Measure(13, locs=(11,12), resetto=0)),
                      chain(13, control(13, 13, (10, 2)=>SWAP), control(13, 13, (9, 1)=>SWAP)),
                      put(13, 13=>H))
     cr_test(repeat(join(zero_state(5),rand_state(8)),5000), DCc, DCct)
     
-    # MStest(regT::DefaultRegister, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
-    # MStest(MSCircuit::ChainBlock; regAll::DefaultRegister)
-    # MSTtest(regT::DefaultRegister, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
-    m = 3000
+    # MStest(regT::ArrayReg, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
+    # MStest(MSCircuit::ChainBlock; regAll::ArrayReg)
+    # MSTtest(regT::ArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     ## MPSblcoks = MPSC("CS", 6, 1, 1).mpsBlocks
+    m = 3000
     n = 6
     v = 1
     r = 1
@@ -122,7 +126,8 @@ end
     @test isapprox(t1.Eoverlap, t1.Aoverlap, atol=1.001abs(t1.error*t1.Eoverlap))
     Ext_overlap = SWAPtest(zero_state(n)|>mps1.cExtend, regT, nMeasure=m).overlap
     @test isapprox.(t1.Eoverlap, Ext_overlap, atol=1.001abs(t1.error*t1.Eoverlap))
-    ## MPSblcoks = MPSC(("DC",3), 8, 2, 3).mpsBlocks
+    
+    ## MPSblcoks = MPSC(("DC",2), 6, 2, 2).mpsBlocks
     n = 6
     v = 2
     r = 2
@@ -149,6 +154,7 @@ end
 end
 
 @testset "MSQRtrain!(MSQRtrain.jl) + SWAPtrain!(SWAPtrain.jl)" begin
+    seedNum = 1234
     n = 4
     v = 2
     r = 1
@@ -160,9 +166,7 @@ end
     c = MScircuit(n, v, r, mps.mpsBlocks)
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
-    nT1 = 150
-    nT2 = 300 
-    m = 500
+    m = 1000
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
@@ -183,37 +187,67 @@ end
 
     showON = false
     Random.seed!(seedNum)
-    mres1q = MSQRtrain!(regT, c_m1q, nT1, nMeasure=m, GDmethod = md1, show=showON)
+    mres1q = MSQRtrain!(regT, c_m1q, 50, nMeasure=m, GDmethod = md1, show=showON)
     Random.seed!(seedNum)
-    sres1q = SWAPtrain!(regT, c_s1q, nT1, nMeasure=m, GDmethod = md1, show=showON)
+    mres2q = MSQRtrain!(regT, c_m2q, 200, nMeasure=m, GDmethod = md2, show=showON)
     Random.seed!(seedNum)
-    mres2q = MSQRtrain!(regT, c_m2q, nT2, nMeasure=m, GDmethod = md2, show=showON)
+    sres1q = SWAPtrain!(regT, c_s1q, 50, nMeasure=m, GDmethod = md1, show=showON)
     Random.seed!(seedNum)
-    sres2q = SWAPtrain!(regT, c_s2q, nT2, nMeasure=m, GDmethod = md2, show=showON)
+    sres2q = SWAPtrain!(regT, c_s2q, 200, nMeasure=m, GDmethod = md2, show=showON)
     Random.seed!(seedNum)
-    mres1n = MSQRtrain!(regT, c_m1n, nT1, nMeasure=m, GDmethod = md1, Gmethod="Ndiff", show=showON)
+    mres1n = MSQRtrain!(regT, c_m1n, 100, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    sres1n = SWAPtrain!(regT, c_s1n, nT1, nMeasure=m, GDmethod = md1, Gmethod="Ndiff", show=showON)
+    mres2n = MSQRtrain!(regT, c_m2n, 200, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    mres2n = MSQRtrain!(regT, c_m2n, nT2, nMeasure=m, GDmethod = md2, Gmethod="Ndiff", show=showON)
+    sres1n = SWAPtrain!(regT, c_s1n, 50, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    sres2n = SWAPtrain!(regT, c_s2n, nT2, nMeasure=m, GDmethod = md2, Gmethod="Ndiff", show=showON)
+    sres2n = SWAPtrain!(regT, c_s2n, 200, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
+
+    # If all the trainings converge in the end.
+    cuti = 9 
+    tol = 0.05
+    mres1qConv = mres1q[end-cuti:end]    # MSQR + ADAM + Qdiff
+    mres2qConv = mres2q[end-cuti:end]    # MSQR + CONS + Qdiff
+    sres1qConv = sres1q[end-cuti:end]    # SWAP + ADAM + Qdiff
+    sres2qConv = sres2q[end-cuti:end]    # SWAP + CONS + Qdiff
+    mres1nConv = mres1n[end-cuti:end]    # MSQR + ADAM + Ndiff
+    mres2nConv = mres2n[end-cuti:end]    # MSQR + CONS + Ndiff
+    sres1nConv = sres1n[end-cuti:end]    # SWAP + ADAM + Ndiff
+    sres2nConv = sres2n[end-cuti:end]    # SWAP + CONS + Ndiff
+    
+    mres1qMean = mres1qConv |> mean
+    mres2qMean = mres2qConv |> mean
+    sres1qMean = sres1qConv |> mean
+    sres2qMean = sres2qConv |> mean
+    mres1nMean = mres1nConv |> mean
+    mres2nMean = mres2nConv |> mean
+    sres1nMean = sres1nConv |> mean
+    sres2nMean = sres2nConv |> mean
+
+    @test std(mres1qConv) ≤ tol*mres1qMean
+    @test std(mres2qConv) ≤ tol*mres2qMean
+    @test std(sres1qConv) ≤ tol*sres1qMean
+    @test std(sres2qConv) ≤ tol*sres2qMean
+    @test std(mres1nConv) ≤ tol*mres1nMean
+    @test std(mres2nConv) ≤ tol*mres2nMean
+    @test std(sres1nConv) ≤ tol*sres1nMean
+    @test std(sres2nConv) ≤ tol*sres2nMean 
 
     # If ADAM and default SGD converge to the approximately same value.
-    # (Including Ndiff and Qdiff situations)
+    ## (Including Ndiff and Qdiff situations)
     tol2 = 0.05
-    @test isapprox.(mean(mres1q[end-9,end]), mean(mres2q[end-9,end]), atol=tol2)
-    @test isapprox.(mean(sres1q[end-9,end]), mean(sres2q[end-9,end]), atol=tol2)
-    @test isapprox.(mean(mres1n[end-9,end]), mean(mres2n[end-9,end]), atol=tol2)
-    @test isapprox.(mean(sres1n[end-9,end]), mean(sres2n[end-9,end]), atol=tol2)
+    @test isapprox(mres1qMean, mres2qMean, atol=tol2*max( mres1qMean, mres2qMean ))
+    @test isapprox(sres1qMean, sres2qMean, atol=tol2*max( sres1qMean, sres2qMean ))
+    @test isapprox(mres1nMean, mres2nMean, atol=tol2*max( mres1nMean, mres2nMean ))
+    @test isapprox(sres1nMean, sres2nMean, atol=tol2*max( sres1nMean, sres2nMean ))
 
     # If MSQRtrain and SWAPtrain converge to the approximately same value.
-    # (Including Ndiff and Qdiff situations)
+    ## (Including Ndiff and Qdiff situations)
     tol3 = 0.05
-    @test isapprox.(mean(mres1q[end-9,end]), mean(sres1q[end-9,end]), atol=tol3)
-    @test isapprox.(mean(mres2q[end-9,end]), mean(sres2q[end-9,end]), atol=tol3)
-    @test isapprox.(mean(mres1n[end-9,end]), mean(sres1n[end-9,end]), atol=tol3)
-    @test isapprox.(mean(mres2n[end-9,end]), mean(sres2n[end-9,end]), atol=tol3)
+    @test isapprox(mres1qMean, sres1qMean, atol=tol3*max( mres1qMean, sres1qMean ))
+    @test isapprox(mres2qMean, sres2qMean, atol=tol3*max( mres2qMean, sres2qMean ))
+    @test isapprox(mres1nMean, sres1nMean, atol=tol3*max( mres1nMean, sres1nMean ))
+    @test isapprox(mres2nMean, sres2nMean, atol=tol3*max( mres2nMean, sres2nMean ))
 
     # If the training curves monotonically rise.
     function trendCompr(res::Array{Float64, 1})
@@ -232,7 +266,7 @@ end
     trendCompr(sres2n)
 
     # If the overlaps from MSQR have enough accuracy.
-    function oltest(regT::DefaultRegister, cGen::ChainBlock, nM::Int64, ol0::Float64)
+    function oltest(regT::ArrayReg, cGen::ChainBlock, nM::Int64, ol0::Float64)
         nq = nqubits(cGen)
         regG = zero_state(nq, nbatch=nM) |> cGen
         ol = ((regT.state'*regG.state)[1] |> abs)^2

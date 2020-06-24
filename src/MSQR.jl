@@ -1,8 +1,8 @@
 module MSQR
 
-using Yao, Yao.ConstGate
-using MPSCircuit
-using Flux.Optimise
+using Yao
+using QMPS
+using Flux
 using LinearAlgebra
 using Statistics
 using Test

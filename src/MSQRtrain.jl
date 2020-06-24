@@ -6,12 +6,12 @@ export MSQRtrain!, GDescent
 
 
 """
-    MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
+    MSQRtrain!(regTar::ArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
     -> 
     overlaps::Array{Float64,1}
 MSQR training function. This function will change the parameters of differentiable gates in MSCircuit. When set `nTrain = :auto`, trigger the automaic training ieration.
 """
-function MSQRtrain!(regTar::DefaultRegister, MSCircuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
+function MSQRtrain!(regTar::ArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
                     Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
     cPar = MSCpar(MSCircuit)
     vBit = cPar.vBit
@@ -52,14 +52,14 @@ function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function,
     GD = GDescent(GDmethod)
     tm=Tmethod(circuit)
     witnessOp = put(nqubits(tm.witnessOp), 1=>I2) - tm.witnessOp
-    dGates = collect_blocks(AbstractDiff, circuit)
+    dGates = collect_blocks(QMPS.QDiff, circuit)
     for i=1:nTrain
         if Gmethod == "Qdiff"
-            grads = getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+            grads = getQdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod == "Ndiff"
-            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+            grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod[1] == "Ndiff"
-            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
+            grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
         end 
         dGatesPar = [parameters(dGates[j])[1] for j=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 
@@ -86,17 +86,17 @@ function train!(circuit::ChainBlock; Tmethod::Function,
     GD = GDescent(GDmethod)
     tm=Tmethod(circuit)
     witnessOp = put(nqubits(tm.witnessOp), 1=>I2) - tm.witnessOp
-    dGates = collect_blocks(AbstractDiff, circuit)
+    dGates = collect_blocks(QMPS.QDiff, circuit)
     nTrain = 200
     gap = 199
     @label train
     for i=nTrain-gap:nTrain
         if Gmethod == "Qdiff"
-            grads = getQdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+            grads = getQdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod == "Ndiff"
-            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
+            grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
         elseif Gmethod[1] == "Ndiff"
-            grads = getNdiff.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
+            grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
         end 
         dGatesPar = [parameters(dGates[j])[1] for j=1:length(dGates)]
         dGatesPar = GD(dGatesPar, grads) 
@@ -126,12 +126,12 @@ Function that returns the aimed Gradient Descent method.
 """
 function GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}})
     if GDmethod == "ADAM"
-        resF = (dGatesPar, grads) -> Optimise.update!(ADAM(), dGatesPar, grads)
+        resF = (dGatesPar, grads) -> update!(ADAM(), dGatesPar, grads)
     elseif GDmethod[1] == "ADAM"
         if length(GDmethod) == 2
-            resF = (dGatesPar, grads) -> Optimise.update!(ADAM(GDmethod[2]), dGatesPar, grads)
+            resF = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(GDmethod[2]), dGatesPar, grads)
         elseif length(GDmethod) == 3    
-            resF = (dGatesPar, grads) -> Optimise.update!(ADAM(GDmethod[2],GDmethod[3]), dGatesPar, grads)
+            resF = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(GDmethod[2],GDmethod[3]), dGatesPar, grads)
         end    
     elseif GDmethod[1] == "default" && length(GDmethod) == 2
         resF = (dGatesPar, grads) -> dGatesPar - grads.*GDmethod[2]

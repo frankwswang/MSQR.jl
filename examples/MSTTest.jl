@@ -1,5 +1,5 @@
-# push!(LOAD_PATH, abspath("./src"))
-# push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
+push!(LOAD_PATH, abspath("./src"))
+push!(LOAD_PATH, abspath("../MPSCircuit.jl/src"))
 using Yao, MSQR, MPSCircuit
 
 # MS Test of Cluster State.
