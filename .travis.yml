@@ -17,13 +17,13 @@ cache:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia --project --color=yes --check-bounds=yes -e 'import Pkg; Pkg.instantiate(); Pkg.build();'
-  - travis_wait 48 julia --project --color=yes -e 'import Pkg; Pkg.test( ; coverage=true)'
+  - travis_wait 48 julia --project --color=yes --check-bounds=yes -e 'import Pkg; Pkg.test( ; coverage=true)';
 
 jobs:
   fast_finish: true
-  # allow_failures:
-  #   - julia: 1.3
+
 after_success:
+  - |
   - julia -e '
       import Pkg
       Pkg.add("Coverage")
