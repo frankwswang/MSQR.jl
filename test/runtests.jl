@@ -104,9 +104,9 @@ end
     # MStest(regT::ArrayReg, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     # MStest(MSCircuit::ChainBlock; regAll::ArrayReg)
     # MSTtest(regT::ArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
-    ## MPSblcoks = MPSC("CS", 6, 1, 1).mpsBlocks
+    ## MPSblcoks = MPSC("CS", 5, 1, 1).mpsBlocks
     m = 500
-    n = 6
+    n = 5
     v = 1
     r = 1
     Random.seed!(seedNum)
@@ -166,7 +166,7 @@ end
     c = MScircuit(n, v, r, mps.mpsBlocks)
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
-    m = 200
+    m = 150
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
