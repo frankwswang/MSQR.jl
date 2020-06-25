@@ -1,5 +1,3 @@
-push!(LOAD_PATH, abspath("./src"))
-push!(LOAD_PATH, abspath("../QMPS/src"))
 using Test, QMPS, Yao, Random, Statistics
 using MSQR
 
@@ -155,8 +153,8 @@ end
 
 @testset "MSQRtrain!(MSQRtrain.jl) + SWAPtrain!(SWAPtrain.jl)" begin
     seedNum = 1234
-    n = 4
-    v = 2
+    n = 3
+    v = 1
     r = 1
     d = 2
     Random.seed!(seedNum)
@@ -187,25 +185,25 @@ end
 
     showON = false
     Random.seed!(seedNum)
-    mres1q = MSQRtrain!(regT, c_m1q, 50, nMeasure=m, GDmethod = md1, show=showON)
+    mres1q = MSQRtrain!(regT, c_m1q, 40, nMeasure=m, GDmethod = md1, show=showON)
     Random.seed!(seedNum)
-    mres2q = MSQRtrain!(regT, c_m2q, 200, nMeasure=m, GDmethod = md2, show=showON)
+    mres2q = MSQRtrain!(regT, c_m2q, 80, nMeasure=m, GDmethod = md2, show=showON)
     Random.seed!(seedNum)
-    sres1q = SWAPtrain!(regT, c_s1q, 50, nMeasure=m, GDmethod = md1, show=showON)
+    sres1q = SWAPtrain!(regT, c_s1q, 40, nMeasure=m, GDmethod = md1, show=showON)
     Random.seed!(seedNum)
-    sres2q = SWAPtrain!(regT, c_s2q, 200, nMeasure=m, GDmethod = md2, show=showON)
+    sres2q = SWAPtrain!(regT, c_s2q, 80, nMeasure=m, GDmethod = md2, show=showON)
     Random.seed!(seedNum)
-    mres1n = MSQRtrain!(regT, c_m1n, 100, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
+    mres1n = MSQRtrain!(regT, c_m1n, 40, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    mres2n = MSQRtrain!(regT, c_m2n, 200, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
+    mres2n = MSQRtrain!(regT, c_m2n, 80, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    sres1n = SWAPtrain!(regT, c_s1n, 50, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
+    sres1n = SWAPtrain!(regT, c_s1n, 40, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    sres2n = SWAPtrain!(regT, c_s2n, 200, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
+    sres2n = SWAPtrain!(regT, c_s2n, 80, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
 
     # If all the trainings converge in the end.
     cuti = 9 
-    tol = 0.075
+    tol = 0.06
     mres1qConv = mres1q[end-cuti:end]    # MSQR + ADAM + Qdiff
     mres2qConv = mres2q[end-cuti:end]    # MSQR + CONS + Qdiff
     sres1qConv = sres1q[end-cuti:end]    # SWAP + ADAM + Qdiff
@@ -235,7 +233,7 @@ end
 
     # If ADAM and default SGD converge to the approximately same value.
     ## (Including Ndiff and Qdiff situations)
-    tol2 = 0.075
+    tol2 = 0.06
     @test isapprox(mres1qMean, mres2qMean, atol=tol2*max( mres1qMean, mres2qMean ))
     @test isapprox(sres1qMean, sres2qMean, atol=tol2*max( sres1qMean, sres2qMean ))
     @test isapprox(mres1nMean, mres2nMean, atol=tol2*max( mres1nMean, mres2nMean ))
@@ -243,7 +241,7 @@ end
 
     # If MSQRtrain and SWAPtrain converge to the approximately same value.
     ## (Including Ndiff and Qdiff situations)
-    tol3 = 0.075
+    tol3 = 0.06
     @test isapprox(mres1qMean, sres1qMean, atol=tol3*max( mres1qMean, sres1qMean ))
     @test isapprox(mres2qMean, sres2qMean, atol=tol3*max( mres2qMean, sres2qMean ))
     @test isapprox(mres1nMean, sres1nMean, atol=tol3*max( mres1nMean, sres1nMean ))
