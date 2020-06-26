@@ -11,8 +11,6 @@ os:
   - windows
 arch:
   - x64
-env:
-  - JULIA_NUM_THREADS=2
 cache:
   directories:
     - ~/.julia/artifacts
