@@ -122,22 +122,20 @@ end
 
 
 """
-    GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}}) 
+    GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}} = ("default",0.01)) 
     -> 
     reF::Function
 Function that returns the aimed Gradient Descent method.
 """
-function GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}})
+function GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}}=("default",0.01))
     if GDmethod == "ADAM"
-        resF = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(), dGatesPar, grads)
-    elseif GDmethod[1] == "ADAM"
-        if length(GDmethod) == 2
-            resF = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(GDmethod[2]), dGatesPar, grads)
-        elseif length(GDmethod) == 3    
-            resF = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(GDmethod[2],GDmethod[3]), dGatesPar, grads)
-        end    
+        resFunc = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(), dGatesPar, grads)
+    elseif GDmethod[1] == "ADAM" && (2 ≤ length(GDmethod) ≤ 3)
+        resFunc = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(GDmethod[2:end]...), dGatesPar, grads)  
     elseif GDmethod[1] == "default" && length(GDmethod) == 2
-        resF = (dGatesPar, grads) -> dGatesPar - grads.*GDmethod[2]
+        resFunc = (dGatesPar, grads) -> dGatesPar - grads.*GDmethod[2]
+    else
+        error("The optimizer of Gradient Descent method is not supported or not specified.")
     end
-    resF
+    resFunc
 end

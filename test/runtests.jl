@@ -168,6 +168,8 @@ end
     md1 = ("ADAM", 0.05)
     md2 = ("default", 0.2)
     m = 150
+    ## Testing function exceptions.
+    @test_throws ErrorException GDescent("default")
 
     mps_m1q = deepcopy(mps)
     c_m1q = MScircuit(n, v, r, mps_m1q.mpsBlocks)
@@ -207,15 +209,11 @@ end
     c_m1n_2 = MScircuit(n, v, r, deepcopy(mps).mpsBlocks)
     Random.seed!(seedNum)
     a = MSQRtrain!(regT, c_m1n_2, 150, nMeasure=200, GDmethod = ("ADAM", 0.05, (0.9, 0.999)), Gmethod="Ndiff", show=showON)
-    # @show a[end-4:end]
     mres1n_2 = MSQRtrain!(regT, c_m1n_2, :auto, nMeasure=m, GDmethod = md1, show=showON, ConvTh=(5e-3,1e-2))
-    # @show length(mres1n_2)
     c_s1n_2 = deepcopy(mps).cExtend
     Random.seed!(seedNum)
     b = SWAPtrain!(regT, c_s1n_2, 20, nMeasure=m, GDmethod = md1, show=showON)
-    # @show b[end-4:end]
     sres1n_2 = SWAPtrain!(regT, c_s1n_2, :auto, nMeasure=m, GDmethod = "ADAM", show=showON, ConvTh=(5e-3,1e-2))
-    # @show length(sres1n_2)
 
     # If all the trainings converge in the end.
     cuti = 9
