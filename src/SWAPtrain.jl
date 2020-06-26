@@ -83,13 +83,14 @@ end
 
 
 """
-    SWAPtrain!(regTar::ArrayReg, circuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON) 
+    SWAPtrain!(regTar::ArrayReg, circuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON, ConvTh::Tuple{Float64, Float64}=(5e-4, 1e-3)) 
     -> 
     overlaps::Array{Float64,1}
 SWAP-Test training function. This function will change the parameters of differentiable gates in circuit. When set `nTrain = :auto`, trigger the automaic training ieration. 
 """
 function SWAPtrain!(regTar::ArrayReg, circuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
-                    Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON)
+                    Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), 
+                    show::Bool=false, useCuYao::Bool=CUDA_ON, ConvTh::Tuple{Float64, Float64}=(5e-4, 1e-3))
     if show
         cPar = MPSDCpar(circuit)
         nBitT = cPar.nBitA
@@ -109,8 +110,8 @@ function SWAPtrain!(regTar::ArrayReg, circuit::ChainBlock, nTrain::Union{Int64, 
         res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
                      Gmethod=Gmethod, GDmethod=GDmethod, show=show)
     elseif nTrain == :auto
-        res = train!(nTrain, circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
-                     Gmethod=Gmethod, GDmethod=GDmethod, show=show)
+        res = train!(circuit, Tmethod = circuit->SWAPtest(circuit, regAll = regA), 
+                     Gmethod=Gmethod, GDmethod=GDmethod, show=show, ConvTh=ConvTh)
     end
     res
 end

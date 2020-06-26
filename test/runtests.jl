@@ -1,3 +1,6 @@
+push!(LOAD_PATH, abspath("./src"))
+push!(LOAD_PATH, abspath("../QMPS/src"))
+
 using Test, QMPS, Yao, Random, Statistics
 using MSQR
 
@@ -102,9 +105,9 @@ end
     # MStest(regT::ArrayReg, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     # MStest(MSCircuit::ChainBlock; regAll::ArrayReg)
     # MSTtest(regT::ArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
-    ## MPSblcoks = MPSC("CS", 5, 1, 1).mpsBlocks
+    ## MPSblcoks = MPSC("CS", 4, 1, 1).mpsBlocks
     m = 500
-    n = 5
+    n = 4
     v = 1
     r = 1
     Random.seed!(seedNum)
@@ -126,10 +129,10 @@ end
     @test isapprox.(t1.Eoverlap, Ext_overlap, atol=1.001abs(t1.error*t1.Eoverlap))
     
     ## MPSblcoks = MPSC(("DC",2), 6, 2, 2).mpsBlocks
-    n = 6
+    n = 4
     v = 2
-    r = 2
-    d = 2
+    r = 1
+    d = 3
     Random.seed!(seedNum)
     regT = rand_state(n)
     mps2 = MPSC(("DC",d), n, v, r)
@@ -185,24 +188,37 @@ end
 
     showON = false
     Random.seed!(seedNum)
-    mres1q = MSQRtrain!(regT, c_m1q, 40, nMeasure=m, GDmethod = md1, show=showON)
+    mres1q = MSQRtrain!(regT, c_m1q, 40, nMeasure=m, GDmethod = md1, show=true) # Test show option.
     Random.seed!(seedNum)
-    mres2q = MSQRtrain!(regT, c_m2q, 80, nMeasure=m, GDmethod = md2, show=showON)
+    mres2q = MSQRtrain!(regT, c_m2q, 50, nMeasure=m, GDmethod = md2, show=showON)
     Random.seed!(seedNum)
-    sres1q = SWAPtrain!(regT, c_s1q, 40, nMeasure=m, GDmethod = md1, show=showON)
+    sres1q = SWAPtrain!(regT, c_s1q, 40, nMeasure=m, GDmethod = md1, show=true) # Test show option.
     Random.seed!(seedNum)
-    sres2q = SWAPtrain!(regT, c_s2q, 80, nMeasure=m, GDmethod = md2, show=showON)
+    sres2q = SWAPtrain!(regT, c_s2q, 50, nMeasure=m, GDmethod = md2, show=showON)
     Random.seed!(seedNum)
     mres1n = MSQRtrain!(regT, c_m1n, 40, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    mres2n = MSQRtrain!(regT, c_m2n, 80, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
+    mres2n = MSQRtrain!(regT, c_m2n, 50, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
     sres1n = SWAPtrain!(regT, c_s1n, 40, nMeasure=m, GDmethod = md1, Gmethod=("Ndiff", 0.05), show=showON)
     Random.seed!(seedNum)
-    sres2n = SWAPtrain!(regT, c_s2n, 80, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
+    sres2n = SWAPtrain!(regT, c_s2n, 50, nMeasure=m, GDmethod = md2, Gmethod=("Ndiff", 0.05), show=showON)
+    ## Test different methods / optional arguments of the functions.
+    c_m1n_2 = MScircuit(n, v, r, deepcopy(mps).mpsBlocks)
+    Random.seed!(seedNum)
+    a = MSQRtrain!(regT, c_m1n_2, 150, nMeasure=200, GDmethod = md1, Gmethod="Ndiff", show=showON)
+    # @show a[end-4:end]
+    mres1n_2 = MSQRtrain!(regT, c_m1n_2, :auto, nMeasure=m, GDmethod = md1, show=showON, ConvTh=(5e-3,1e-2))
+    # @show length(mres1n_2)
+    c_s1n_2 = deepcopy(mps).cExtend
+    Random.seed!(seedNum)
+    b = SWAPtrain!(regT, c_s1n_2, 20, nMeasure=m, GDmethod = md1, show=showON)
+    # @show b[end-4:end]
+    sres1n_2 = SWAPtrain!(regT, c_s1n_2, :auto, nMeasure=m, GDmethod = "ADAM", show=showON, ConvTh=(5e-3,1e-2))
+    # @show length(sres1n_2)
 
     # If all the trainings converge in the end.
-    cuti = 9 
+    cuti = 9
     tol = 0.06
     mres1qConv = mres1q[end-cuti:end]    # MSQR + ADAM + Qdiff
     mres2qConv = mres2q[end-cuti:end]    # MSQR + CONS + Qdiff
@@ -212,6 +228,10 @@ end
     mres2nConv = mres2n[end-cuti:end]    # MSQR + CONS + Ndiff
     sres1nConv = sres1n[end-cuti:end]    # SWAP + ADAM + Ndiff
     sres2nConv = sres2n[end-cuti:end]    # SWAP + CONS + Ndiff
+    # @show mres1n_2Conv = mres1n_2[end-cuti:end]
+    # @show sres1n_2Conv = sres1n_2[end-cuti:end]
+    mres1n_2Conv = mres1n_2[end-cuti:end]
+    sres1n_2Conv = sres1n_2[end-cuti:end]
     
     mres1qMean = mres1qConv |> mean
     mres2qMean = mres2qConv |> mean
@@ -221,6 +241,8 @@ end
     mres2nMean = mres2nConv |> mean
     sres1nMean = sres1nConv |> mean
     sres2nMean = sres2nConv |> mean
+    mres1n_2Mean = mres1n_2Conv |> mean
+    sres1n_2Mean = sres1n_2Conv |> mean
 
     @test std(mres1qConv) ≤ tol*mres1qMean
     @test std(mres2qConv) ≤ tol*mres2qMean
@@ -246,6 +268,10 @@ end
     @test isapprox(mres2qMean, sres2qMean, atol=tol3*max( mres2qMean, sres2qMean ))
     @test isapprox(mres1nMean, sres1nMean, atol=tol3*max( mres1nMean, sres1nMean ))
     @test isapprox(mres2nMean, sres2nMean, atol=tol3*max( mres2nMean, sres2nMean ))
+
+    # If the auto-train actually converges to theoretical maximum.
+    @test isapprox(mres1n_2Mean, 1.0, atol = 1.5e-2)
+    @test isapprox(sres1n_2Mean, 1.0, atol = 1.5e-2)
 
     # If the training curves monotonically rise.
     function trendCompr(res::Array{Float64, 1})
