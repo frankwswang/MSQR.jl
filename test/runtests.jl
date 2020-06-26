@@ -206,7 +206,7 @@ end
     ## Test different methods / optional arguments of the functions.
     c_m1n_2 = MScircuit(n, v, r, deepcopy(mps).mpsBlocks)
     Random.seed!(seedNum)
-    a = MSQRtrain!(regT, c_m1n_2, 150, nMeasure=200, GDmethod = md1, Gmethod="Ndiff", show=showON)
+    a = MSQRtrain!(regT, c_m1n_2, 150, nMeasure=200, GDmethod = ("ADAM", 0.05, (0.9, 0.999)), Gmethod="Ndiff", show=showON)
     # @show a[end-4:end]
     mres1n_2 = MSQRtrain!(regT, c_m1n_2, :auto, nMeasure=m, GDmethod = md1, show=showON, ConvTh=(5e-3,1e-2))
     # @show length(mres1n_2)

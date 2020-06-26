@@ -82,21 +82,6 @@ function train!(nTrain::Int64, circuit::ChainBlock; Tmethod::Function,
     witnessOp = put(nqubits(tm.witnessOp), 1=>I2) - tm.witnessOp
     dGates = collect_blocks(QMPS.QDiff, circuit)
     for i=1:nTrain
-        # if Gmethod == "Qdiff"
-        #     grads = getQdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
-        # elseif Gmethod == "Ndiff"
-        #     grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
-        # elseif Gmethod[1] == "Ndiff"
-        #     grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
-        # end 
-        # dGatesPar = [parameters(dGates[j])[1] for j=1:length(dGates)]
-        # dGatesPar = GD(dGatesPar, grads) 
-        # dispatch!.(dGates, dGatesPar)
-        # tm = Tmethod(circuit)
-        # showCase = (25*i)%nTrain==0
-        # if  showCase && show
-        #     println("Training Step $(i), overlap = $(tm.overlap)")
-        # end
         showCase = (25*i)%nTrain==0
         overlap = getDiffs!(circuit, dGates, witnessOp, Tmethod, GDf=GD, showStep=(showCase && show), Gmethod=Gmethod, j=i)
         push!(overlaps,overlap)
@@ -121,22 +106,6 @@ function train!(circuit::ChainBlock; Tmethod::Function,
     gap = 199
     @label train
     for i=nTrain-gap:nTrain
-        # if Gmethod == "Qdiff"
-        #     grads = getQdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
-        # elseif Gmethod == "Ndiff"
-        #     grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp))
-        # elseif Gmethod[1] == "Ndiff"
-        #     grads = getNdiff!.(()->Tmethod(circuit).reg, dGates, Ref(witnessOp), δ=Gmethod[2])
-        # end 
-        # dGatesPar = [parameters(dGates[j])[1] for j=1:length(dGates)]
-        # dGatesPar = GD(dGatesPar, grads) 
-        # dispatch!.(dGates, dGatesPar)
-        # tm = Tmethod(circuit)
-        # showCase = (25*i)%nTrain==0
-        # if  showCase && show
-        #     println("Training Step $(i), overlap = $(tm.overlap)")
-        # end
-        # push!(overlaps,tm.overlap)
         showCase = (25*i)%nTrain==0
         overlap = getDiffs!(circuit, dGates, witnessOp, Tmethod, GDf=GD, showStep=(showCase && show), Gmethod=Gmethod, j=i)
         push!(overlaps,overlap)
