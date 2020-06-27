@@ -10,7 +10,6 @@ QMPS = "c4dd8f60-5e06-11e9-07f8-63d1cb63a4d1"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [Compat]
 QMPS = "= 0.3.3"
