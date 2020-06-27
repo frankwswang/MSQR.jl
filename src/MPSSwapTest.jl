@@ -13,13 +13,13 @@ Fields:
 \n`vBit::Int64`: Number of virtual qubits.
 \n`rBit::Int64`: Number of reusable qubits.
 \n`nBitT::Int64`: Number of qubits in target register.
-\n`nBitA::Int64`: Number of qubits(lines) in MSCircuit.
+\n`nBitA::Int64`: Number of qubits (lines) in MSCircuit.
 """
 struct MSCpar
     vBit::Int64  # Number of virtual qubits.
     rBit::Int64  # Number of reusable qubits.
     nBitT::Int64 # Number of qubits in target register.
-    nBitA::Int64 # Number of qubits(lines) in MSCircuit.
+    nBitA::Int64 # Number of qubits (lines) in MSCircuit.
     depth::Int64 # Depth of each MPS block in MSCircuit.
     
     function MSCpar(MSCircuit::ChainBlock)

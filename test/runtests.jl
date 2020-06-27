@@ -1,6 +1,3 @@
-push!(LOAD_PATH, abspath("./src"))
-push!(LOAD_PATH, abspath("../QMPS/src"))
-
 using Test, QMPS, Yao, Random, Statistics
 using MSQR
 

@@ -24,7 +24,7 @@ Combining MPS-Swap Test method and Quantum Gradient Optimization, MSQR can train
 
 ### Julia Environment
 
-* [__Julia 1.1__](https://julialang.org)
+* [__Julia 1.3-1.4__](https://julialang.org)
 
 ### Installation
 
