@@ -5,7 +5,7 @@ using QMPS
 using Flux
 using LinearAlgebra
 using Statistics
-using Test
+# using Test
 using Requires
 
 include("MPSSwapTest.jl")
