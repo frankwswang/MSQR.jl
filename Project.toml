@@ -1,6 +1,6 @@
 name = "MSQR"
 uuid = "1da0c1b0-64df-11e9-3ca4-e71d211e204c"
-authors = ["frankwangws <frank.wang.w.s@gmail.com>"]
+authors = ["Weishi Wang <ws.frank.wang@gmail.com>"]
 version = "0.2.2"
 
 [deps]
@@ -13,4 +13,4 @@ Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
 
 [Compat]
 QMPS = "= 0.3.3"
-Yao = "0.6.2"
+Yao = "0.8"
