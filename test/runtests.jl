@@ -25,8 +25,8 @@ using MSQR
                             control(7, 7, (4,1)=>SWAP)), 
                    put(7, 7=>H))
     op = put(2n+1, 2n+1=>Z)
-    reg12t = repeat(join(zero_state(1), reg1, reg2), m) |> cST
-    reg23t = repeat(join(zero_state(1), reg3, reg2), m) |> cST
+    reg12t = clone(join(zero_state(1), reg1, reg2), m) |> cST
+    reg23t = clone(join(zero_state(1), reg3, reg2), m) |> cST
     olp12t = expect(op, reg12t) |> mean |> real
     olp23t = expect(op, reg23t) |> mean |> real
 
@@ -62,7 +62,7 @@ end
     opx(n) = chain(n, [put(n, i=>X) for i=1:n])
     opy(n) = chain(n, [put(n, i=>Y) for i=1:n])
     opz(n) = chain(n, [put(n, i=>Z) for i=1:n])
-    function cr_test(reg::ArrayReg, cr::CompositeBlock, crt::CompositeBlock)
+    function cr_test(reg::AbstractArrayReg, cr::CompositeBlock, crt::CompositeBlock)
         n = nqubits(reg)
         Random.seed!(seedNum)
         reg1x = expect(opx(n), copy(reg) |> cr) |> mean |> real
@@ -80,7 +80,7 @@ end
         @test reg1y ≈ reg2y
         @test reg1z ≈ reg2z
     end
-    cr_test(repeat(join(zero_state(3),rand_state(4)),5000), CSc, CSct)
+    cr_test(clone(join(zero_state(3),rand_state(4)),5000), CSc, CSct)
     
     ## MPSblcoks = MPSC(("DC",2), 8, 2, 2).mpsBlocks
     n1 = 8
@@ -97,11 +97,11 @@ end
                      chain(13, subroutine(13, dcMblocks[3], 9:12), control(13, 13, (12, 4)=>SWAP), control(13, 13, (11, 3)=>SWAP), Measure(13, locs=(11,12), resetto=0)),
                      chain(13, control(13, 13, (10, 2)=>SWAP), control(13, 13, (9, 1)=>SWAP)),
                      put(13, 13=>H))
-    cr_test(repeat(join(zero_state(5),rand_state(8)),5000), DCc, DCct)
+    cr_test(clone(join(zero_state(5),rand_state(8)),5000), DCc, DCct)
     
-    # MStest(regT::ArrayReg, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
-    # MStest(MSCircuit::ChainBlock; regAll::ArrayReg)
-    # MSTtest(regT::ArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
+    # MStest(regT::AbstractArrayReg, MSCircuit::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
+    # MStest(MSCircuit::ChainBlock; regAll::AbstractArrayReg)
+    # MSTtest(regT::AbstractArrayReg, MSCircuit::ChainBlock, cExtend::ChainBlock; nMeasure::Int64=1, useCuYao::Bool=CUDA_ON)
     ## MPSblcoks = MPSC("CS", 4, 1, 1).mpsBlocks
     m = 500
     n = 4
@@ -114,7 +114,7 @@ end
     Random.seed!(seedNum)
     t1_0_m1 = MStest(regT, c1, nMeasure=m)
     Random.seed!(seedNum)
-    t1_0_m2 = MStest(c1, regAll=repeat(join(zero_state(nqubits(c1)-n),regT),m))
+    t1_0_m2 = MStest(c1, regAll=clone(join(zero_state(nqubits(c1)-n),regT),m))
     Random.seed!(seedNum)
     t1 = MSTtest(regT, c1, mps1.cExtend, nMeasure=m)
     @test t1_0_m1.reg ≈ t1_0_m2.reg
@@ -139,7 +139,7 @@ end
     Random.seed!(seedNum)
     t2_0_m1 = MStest(regT, c2, nMeasure=m)
     Random.seed!(seedNum)
-    t2_0_m2 = MStest(c2, regAll=repeat(join(zero_state(p.nBitA-n),regT),m))
+    t2_0_m2 = MStest(c2, regAll=clone(join(zero_state(p.nBitA-n),regT),m))
     Random.seed!(seedNum)
     t2 = MSTtest(regT, c2, mps2.cExtend, nMeasure=m)
     @test t2_0_m1.reg ≈ t2_0_m2.reg
@@ -285,7 +285,7 @@ end
     trendCompr(sres2n)
 
     # If the overlaps from MSQR have enough accuracy.
-    function oltest(regT::ArrayReg, cGen::ChainBlock, nM::Int64, ol0::Float64)
+    function oltest(regT::AbstractArrayReg, cGen::ChainBlock, nM::Int64, ol0::Float64)
         nq = nqubits(cGen)
         regG = zero_state(nq, nbatch=nM) |> cGen
         ol = ((regT.state'*regG.state)[1] |> abs)^2

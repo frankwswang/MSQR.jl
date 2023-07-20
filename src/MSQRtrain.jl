@@ -6,12 +6,12 @@ export MSQRtrain!, GDescent
 
 
 """
-    MSQRtrain!(regTar::ArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON, ConvTh::Tuple{Float64, Float64}=(5e-4, 1e-3)) 
+    MSQRtrain!(regTar::AbstractArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64, :auto}; nMeasure::Int64=1, Gmethod::String="Qdiff", GDmethod=("default",0.01), show::Bool=false, useCuYao::Bool=CUDA_ON, ConvTh::Tuple{Float64, Float64}=(5e-4, 1e-3)) 
     -> 
     overlaps::Array{Float64,1}
 MSQR training function. This function will change the parameters of differentiable gates in MSCircuit. When set `nTrain = :auto`, trigger the automaic training ieration.
 """
-function MSQRtrain!(regTar::ArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
+function MSQRtrain!(regTar::AbstractArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64, Symbol}; nMeasure::Int64=1,
                     Gmethod::Union{String, Tuple{String,Float64}}="Qdiff", GDmethod=("default",0.01), show::Bool=false, 
                     useCuYao::Bool=CUDA_ON, ConvTh::Tuple{Float64, Float64}=(5e-4, 1e-3))
     cPar = MSCpar(MSCircuit)
@@ -26,7 +26,7 @@ function MSQRtrain!(regTar::ArrayReg, MSCircuit::ChainBlock, nTrain::Union{Int64
         println("Initial overlap = $(MStest(regTar, MSCircuit, nMeasure=nMeasure, useCuYao=useCuYao).overlap)")
     end
     reg0 = zero_state((vBit+rBit+1), nbatch=nMeasure)
-    regT = repeat(copy(regTar), nMeasure)
+    regT = clone(copy(regTar), nMeasure)
     regA = join(reg0, regT)
     useCuYao == true && (regA = regA |> cu)
     if typeof(nTrain) == Int64
