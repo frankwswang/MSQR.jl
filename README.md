@@ -1,7 +1,6 @@
 # MSQR.jl
 
-[![Build Status](https://travis-ci.com/frankwswang/MSQR.jl.svg?branch=master)](https://travis-ci.com/frankwswang/MSQR.jl)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/frankwswang/MSQR.jl?svg=true)](https://ci.appveyor.com/project/frankwswang/MSQR-jl)
+[![Build Status](https://github.com/frankwswang/MSQR.jl/actions/workflows/CI-JS-latest.yml/badge.svg)](https://github.com/frankwswang/MSQR.jl/actions/workflows/CI-JS-latest.yml)
 [![Coverage](https://codecov.io/gh/frankwswang/MSQR.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/frankwswang/MSQR.jl)
 
 __MSQR__ is the short form for __MPS-SWAP-test__ hybrid structural __Quantum__ state __Reconstruction__ algorithm.
@@ -24,7 +23,7 @@ Combining MPS-Swap Test method and Quantum Gradient Optimization, MSQR can train
 
 ### Julia Environment
 
-* [__Julia 1.3-1.4__](https://julialang.org)
+* [__Julia 1.9__](https://julialang.org)
 
 ### Installation
 
