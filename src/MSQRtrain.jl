@@ -129,9 +129,9 @@ Function that returns the aimed Gradient Descent method.
 """
 function GDescent(GDmethod::Union{String, Tuple{String,Float64}, Tuple{String,Float64,Tuple{Float64,Float64}}}=("default",0.01))
     if GDmethod == "ADAM"
-        resFunc = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(), dGatesPar, grads)
+        resFunc = (dGatesPar, grads) -> Flux.Optimise.update!(Adam(), dGatesPar, grads)
     elseif GDmethod[1] == "ADAM" && (2 ≤ length(GDmethod) ≤ 3)
-        resFunc = (dGatesPar, grads) -> Flux.Optimise.update!(ADAM(GDmethod[2:end]...), dGatesPar, grads)  
+        resFunc = (dGatesPar, grads) -> Flux.Optimise.update!(Adam(GDmethod[2:end]...), dGatesPar, grads)  
     elseif GDmethod[1] == "default" && length(GDmethod) == 2
         resFunc = (dGatesPar, grads) -> dGatesPar - grads.*GDmethod[2]
     else
